@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4F0DAC89-4421-4C81-A270-B067971A1767}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Pixelator.Api.Tests</RootNamespace>
+    <AssemblyName>Pixelator.Api.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+  <Choose>
+    <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+      </ItemGroup>
+    </When>
+    <Otherwise />
+  </Choose>
+  <ItemGroup>
+    <Compile Include="Codec\Compression\DeflateCompressionAlgorithmTest.cs" />
+    <Compile Include="Codec\Compression\GzipCompressionAlgorithmTest.cs" />
+    <Compile Include="Codec\Compression\ZlibCompressionAlgorithmTest.cs" />
+    <Compile Include="Codec\Compression\CompressionAlgorithmTest.cs" />
+    <Compile Include="Codec\Cryptography\Rijndael256EncryptionAlgorithmTest.cs" />
+    <Compile Include="Codec\Cryptography\EncryptionAlgorithmTest.cs" />
+    <Compile Include="Codec\Cryptography\Aes256EncryptionAlgorithmTest.cs" />
+    <Compile Include="Codec\Imaging\GifImagingStreamTest.cs" />
+    <Compile Include="Codec\Imaging\BmpImagingStreamTest.cs" />
+    <Compile Include="Codec\Imaging\PngImagingStreamTest.cs" />
+    <Compile Include="Codec\Imaging\ImagingStreamTest.cs" />
+    <Compile Include="Codec\Layout\AssertEx.cs" />
+    <Compile Include="Codec\Layout\Chunks\FileContentChunkReaderAndWriterTest.cs" />
+    <Compile Include="Codec\Layout\Chunks\FileLayoutChunkReaderAndWriterTest.cs" />
+    <Compile Include="Codec\Layout\Chunks\ChunkReaderAndWriterTest.cs" />
+    <Compile Include="Codec\Layout\Padding\IsoPaddingTest.cs" />
+    <Compile Include="Codec\Layout\Padding\PaddingTest.cs" />
+    <Compile Include="Codec\Layout\Serialization\MetadataSerializerTest.cs" />
+    <Compile Include="Codec\Layout\Serialization\FileContentsSerializerTest.cs" />
+    <Compile Include="Codec\Layout\Serialization\ChunkLayoutSerializerTest.cs" />
+    <Compile Include="Codec\Layout\Serialization\FileLayoutSerializerTest.cs" />
+    <Compile Include="Codec\Layout\Serialization\HeaderSerializerTest.cs" />
+    <Compile Include="Codec\Layout\Serialization\ChunkInfoSerializerTest.cs" />
+    <Compile Include="Codec\Layout\Serialization\SerializerTest.cs" />
+    <Compile Include="Codec\Layout\Utility\FileGroupingServiceTest.cs" />
+    <Compile Include="Helpers\StreamExtensions.cs" />
+    <Compile Include="Integration\DirectoryAssert.cs" />
+    <Compile Include="Integration\EncodingDecodingEquivalencyTest.cs" />
+    <Compile Include="Output\DirectoryTest.cs" />
+    <Compile Include="Output\FileTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Codec\Compression\CompressionTestData\" />
+    <Folder Include="Codec\Cryptography\CryptographyTestData\" />
+    <Folder Include="Codec\Imaging\ImageTestData\" />
+    <Folder Include="Integration\TestData\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Pixelator.Api\Pixelator.Api.csproj">
+      <Project>{ff47c9ad-f654-4764-a1fc-9763538478bd}</Project>
+      <Name>Pixelator.Api</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Choose>
+    <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.QualityTools.CodedUITestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Extension, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.VisualStudio.TestTools.UITesting, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>XCOPY "$(ProjectDir)Integration\TestData" "$(TargetDir)TestData\" /s /i /y /E
+XCOPY "$(ProjectDir)Codec\Imaging\ImageTestData" "$(TargetDir)ImageTestData\" /s /i /y /E
+XCOPY "$(ProjectDir)Codec\Cryptography\CryptographyTestData" "$(TargetDir)CryptographyTestData\" /s /i /y /E
+XCOPY "$(ProjectDir)Codec\Compression\CompressionTestData" "$(TargetDir)CompressionTestData\" /s /i /y /E</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

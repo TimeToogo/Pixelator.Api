@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FF47C9AD-F654-4764-A1FC-9763538478BD}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Pixelator.Api</RootNamespace>
+    <AssemblyName>Pixelator.Api</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Ionic.Zip">
+      <HintPath>..\..\packages\DotNetZip.1.9.3\lib\net20\Ionic.Zip.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Codec\DataInfo.cs" />
+    <Compile Include="Codec\ImageEncoderFactory.cs" />
+    <Compile Include="Codec\ImageDecoderFactory.cs" />
+    <Compile Include="Codec\ImageDecoderBase.cs" />
+    <Compile Include="Codec\ImageEncoderBase.cs" />
+    <Compile Include="Codec\ImageTranscoderBase.cs" />
+    <Compile Include="Codec\Imaging\GifImageFormat.cs" />
+    <Compile Include="Codec\Imaging\BmpImageFormat.cs" />
+    <Compile Include="Codec\Imaging\ImageDimensions.cs" />
+    <Compile Include="Codec\Imaging\ImageDimensionsCalculator.cs" />
+    <Compile Include="Codec\Imaging\ImageLibraryStreams.cs" />
+    <Compile Include="Codec\Imaging\ImageLibraryImageFormat.cs" />
+    <Compile Include="Codec\Layout\ChunkLayoutBuilder.cs" />
+    <Compile Include="Codec\Layout\Padding\IsoPadding.cs" />
+    <Compile Include="Codec\Layout\Padding\Padding.cs" />
+    <Compile Include="Codec\Layout\Utility\FileGroupingService.cs" />
+    <Compile Include="Codec\Signature.cs" />
+    <Compile Include="Codec\Streams\ChainableOuputStreamBase.cs" />
+    <Compile Include="Codec\Compression\CompressionAlgorithm.cs" />
+    <Compile Include="Codec\Compression\CompressionFactory.cs" />
+    <Compile Include="Codec\Compression\DeflateAlgorithm.cs" />
+    <Compile Include="Codec\Compression\GZipAlgorithm.cs" />
+    <Compile Include="Codec\Compression\IonicCompressionAlgorithm.cs" />
+    <Compile Include="Codec\Streams\ChainableInputStreamBase.cs" />
+    <Compile Include="Codec\Compression\ZlibAlgorithm.cs" />
+    <Compile Include="Codec\Cryptography\Aes256Encryption.cs" />
+    <Compile Include="Codec\Cryptography\ConsiderateCryptoStreamAndRfc2898Encryption.cs" />
+    <Compile Include="Codec\Cryptography\SymmetricEncryption.cs" />
+    <Compile Include="Codec\Cryptography\EncryptionAlgorithm.cs" />
+    <Compile Include="Codec\Cryptography\EncryptionFactory.cs" />
+    <Compile Include="Codec\Cryptography\Rijndael256Encryption.cs" />
+    <Compile Include="Codec\Streams\CombinedStream.cs" />
+    <Compile Include="Codec\Streams\IChainableOutputStream.cs" />
+    <Compile Include="Codec\Streams\IChainableInputStream.cs" />
+    <Compile Include="Codec\V1\ImageDecoder.cs" />
+    <Compile Include="Codec\V1\ImageEncoder.cs" />
+    <Compile Include="Codec\Imaging\ImageFormat.cs" />
+    <Compile Include="Codec\Imaging\ImageFormatFactory.cs" />
+    <Compile Include="Codec\Imaging\PngImageFormat.cs" />
+    <Compile Include="Codec\Imaging\PngStreams.cs" />
+    <Compile Include="Codec\Layout\Chunks\ChunkConfiguration.cs" />
+    <Compile Include="Codec\Layout\Chunks\ChunkLayout.cs" />
+    <Compile Include="Codec\Layout\Chunks\ChunkGroup.cs" />
+    <Compile Include="Codec\Streams\SubStream.cs" />
+    <Compile Include="Codec\Structures\Metadata.cs" />
+    <Compile Include="Codec\Layout\Serialization\ChunkLayoutSerializer.cs" />
+    <Compile Include="Codec\Layout\Serialization\ChunkInfoSerializer.cs" />
+    <Compile Include="Codec\Layout\Serialization\MetadataSerializer.cs" />
+    <Compile Include="Codec\Streams\LeaveOpenStreamWrapper.cs" />
+    <Compile Include="Codec\Layout\Chunks\ChunkWriter.cs" />
+    <Compile Include="Codec\Streams\OutputStreamChainBuilder.cs" />
+    <Compile Include="Codec\Layout\Chunks\Chunk.cs" />
+    <Compile Include="Codec\Layout\Chunks\ChunkReader.cs" />
+    <Compile Include="Codec\Structures\Structure.cs" />
+    <Compile Include="Codec\Structures\StructureType.cs" />
+    <Compile Include="Codec\Structures\FileGroup.cs" />
+    <Compile Include="Codec\Structures\FileGroupContents.cs" />
+    <Compile Include="Codec\Layout\Header.cs" />
+    <Compile Include="Codec\Layout\Serialization\FileLayoutSerializer.cs" />
+    <Compile Include="Codec\Layout\Serialization\FileGroupContentsSerializer.cs" />
+    <Compile Include="Codec\Layout\Serialization\HeaderSerializer.cs" />
+    <Compile Include="Codec\Layout\Serialization\Serializer.cs" />
+    <Compile Include="Codec\Streams\InputStreamChainBuilder.cs" />
+    <Compile Include="Codec\Version.cs" />
+    <Compile Include="Common\Directory.cs" />
+    <Compile Include="Configuration\CompressionConfiguration.cs" />
+    <Compile Include="Configuration\DecodingConfiguration.cs" />
+    <Compile Include="Configuration\EncodingConfiguration.cs" />
+    <Compile Include="Configuration\TranscodingConfiguration.cs" />
+    <Compile Include="Exceptions\InvalidPasswordException.cs" />
+    <Compile Include="Exceptions\InvalidFormatException.cs" />
+    <Compile Include="Exceptions\UnsupportedVersionException.cs" />
+    <Compile Include="Exceptions\InvalidHeaderException.cs" />
+    <Compile Include="ImageDecoder.cs" />
+    <Compile Include="Input\Directory.cs" />
+    <Compile Include="Configuration\EncryptionConfiguration.cs" />
+    <Compile Include="Input\File.cs" />
+    <Compile Include="Common\FileInfo.cs" />
+    <Compile Include="EncryptionType.cs" />
+    <Compile Include="Codec\Compression\CompressionOptions.cs" />
+    <Compile Include="Codec\Cryptography\EncryptionOptions.cs" />
+    <Compile Include="Codec\Imaging\ImageOptions.cs" />
+    <Compile Include="Codec\Layout\Chunks\ChunkInfo.cs" />
+    <Compile Include="CompressionLevel.cs" />
+    <Compile Include="Codec\Cryptography\ConsiderateCryptoStream.cs" />
+    <Compile Include="CompressionType.cs" />
+    <Compile Include="Output\FileSystemOutputHandler.cs" />
+    <Compile Include="Output\FileDataOutputHandler.cs" />
+    <Compile Include="Output\NullOutputHandler.cs" />
+    <Compile Include="Utility\EntropyService.cs" />
+    <Compile Include="ImageEncoder.cs" />
+    <Compile Include="Configuration\ImageConfiguration.cs" />
+    <Compile Include="ImageFormat.cs" />
+    <Compile Include="Output\Directory.cs" />
+    <Compile Include="Output\File.cs" />
+    <Compile Include="Codec\Structures\FileLayout.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Output\IFileDataOutputHandler.cs" />
+    <Compile Include="Utility\ITempStorageProvider.cs" />
+    <Compile Include="Utility\TempFileStorageProvider.cs" />
+    <Compile Include="Utility\MemoryStorageProvider.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

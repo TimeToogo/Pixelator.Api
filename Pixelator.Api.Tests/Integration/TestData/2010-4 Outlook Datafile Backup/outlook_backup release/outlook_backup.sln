@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "outlook_backup", "outlook_backup\outlook_backup.csproj", "{D37496EB-8442-4935-BEC8-C1E63A0DF344}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D37496EB-8442-4935-BEC8-C1E63A0DF344}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D37496EB-8442-4935-BEC8-C1E63A0DF344}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D37496EB-8442-4935-BEC8-C1E63A0DF344}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D37496EB-8442-4935-BEC8-C1E63A0DF344}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
