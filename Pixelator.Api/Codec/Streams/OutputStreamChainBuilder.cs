@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Pixelator.Api.Codec.Streams
 {
@@ -13,7 +14,7 @@ namespace Pixelator.Api.Codec.Streams
             }
 
             Stream previousStream = input;
-            foreach (IChainableOutputStream chainableStream in this)
+            foreach (IChainableOutputStream chainableStream in Enumerable.Reverse(this))
             {
                 previousStream = chainableStream.CreateOutputStream(previousStream, leaveOpen, bufferSize);
                 leaveOpen = false;
