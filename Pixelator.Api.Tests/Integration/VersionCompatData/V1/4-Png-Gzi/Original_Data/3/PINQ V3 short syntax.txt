@@ -1,0 +1,13 @@
+
+
+    $peopleTable
+            ->where($row ==> $row['age'] <= 50)
+            ->orderByAscending($row ==> $row['firstName'])
+            ->thenByAscending($row ==> $row['lastName'])
+            ->take(50)
+            ->indexBy($row ==> $row['phoneNumber'])
+            ->select($row ==> [
+				'fullName'    => $row['firstName'] . ' ' . $row['lastName'],
+				'address'     => $row['address'],
+				'dateOfBirth' => $row['dateOfBirth'],
+			]);

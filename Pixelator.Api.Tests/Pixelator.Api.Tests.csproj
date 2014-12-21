@@ -78,7 +78,10 @@
     <Compile Include="Codec\Layout\Utility\FileGroupingServiceTest.cs" />
     <Compile Include="Helpers\StreamExtensions.cs" />
     <Compile Include="Integration\DirectoryAssert.cs" />
+    <Compile Include="Integration\DecodingVersionCompatTestBase.cs" />
     <Compile Include="Integration\EncodingDecodingEquivalencyTest.cs" />
+    <Compile Include="Integration\ImageConfigurations.cs" />
+    <Compile Include="Integration\V1DecodingCompatTest.cs" />
     <Compile Include="Output\DirectoryTest.cs" />
     <Compile Include="Output\FileTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -88,6 +91,8 @@
     <Folder Include="Codec\Cryptography\CryptographyTestData\" />
     <Folder Include="Codec\Imaging\ImageTestData\" />
     <Folder Include="Integration\TestData\" />
+    <Folder Include="Integration\VersionCompatData\V1\" />
+    <Folder Include="Integration\VersionCompatData\__Original\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -120,6 +125,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>XCOPY "$(ProjectDir)Integration\TestData" "$(TargetDir)TestData\" /s /i /y /E
+XCOPY "$(ProjectDir)Integration\VersionCompatData" "$(TargetDir)VersionCompatData\" /s /i /y /E
 XCOPY "$(ProjectDir)Codec\Imaging\ImageTestData" "$(TargetDir)ImageTestData\" /s /i /y /E
 XCOPY "$(ProjectDir)Codec\Cryptography\CryptographyTestData" "$(TargetDir)CryptographyTestData\" /s /i /y /E
 XCOPY "$(ProjectDir)Codec\Compression\CompressionTestData" "$(TargetDir)CompressionTestData\" /s /i /y /E</PostBuildEvent>
