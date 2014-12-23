@@ -1,13 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 
 namespace Pixelator.Api.Codec.Imaging
 {
@@ -93,7 +88,7 @@ namespace Pixelator.Api.Codec.Imaging
             {
                 get { return _bytesPerPixel; }
             }
-
+            
             public override long Length
             {
                 get { return Math.BigMul(_frameLength, _frames.Length); }

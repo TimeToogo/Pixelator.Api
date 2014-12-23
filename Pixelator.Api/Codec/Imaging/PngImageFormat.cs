@@ -1,5 +1,12 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using PixelFormat = System.Windows.Media.PixelFormat;
 
 namespace Pixelator.Api.Codec.Imaging
 {
@@ -10,8 +17,8 @@ namespace Pixelator.Api.Codec.Imaging
         public const byte CompressionMethod = 0;//PNG Standard Compression Method (Zlib)
         public const byte FilterMethod = 0;//No filter
         public const byte InterlaceMethod = 0;//No Interlace
-        public const int Channels = 4;//ARBG
-        private const int _BytesPerPixel = (BitDepth / 8) * Channels;
+        public const int _Channels = 4;//ARBG
+        private const int _BytesPerPixel = (BitDepth / 8) * _Channels;
         private static readonly byte[] _Signature = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 };
 
         public override Api.ImageFormat FormatType
@@ -42,6 +49,34 @@ namespace Pixelator.Api.Codec.Imaging
         public override int BytesPerPixel
         {
             get { return _BytesPerPixel; }
+        }
+
+        public override int Channels
+        {
+            get { return _Channels; }
+        }
+
+        public override Stream LoadPixelDataStream(Bitmap source)
+        {
+            var bitmap = ImageLibraryImageFormat.ConvertBitmap(source);
+            FormatConvertedBitmap formattedBitmap = new FormatConvertedBitmap(bitmap, PixelFormats.Bgra32, null, 100);
+            byte[] bytes = new byte[bitmap.PixelWidth * bitmap.PixelHeight * BytesPerPixel];
+            formattedBitmap.CopyPixels(new Int32Rect(0, 0, formattedBitmap.PixelWidth, formattedBitmap.PixelHeight), bytes, formattedBitmap.PixelWidth * BytesPerPixel, 0);
+
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                byte b = bytes[i];
+                byte g = bytes[i + 1];
+                byte r = bytes[i + 2];
+                byte a = bytes[i + 3];
+
+                bytes[i] = r;
+                bytes[i + 1] = g;
+                bytes[i + 2] = b;
+                bytes[i + 3] = a;
+            }
+
+            return new MemoryStream(bytes);
         }
 
         protected override ImageWriter _CreateWriter(ImageOptions options)

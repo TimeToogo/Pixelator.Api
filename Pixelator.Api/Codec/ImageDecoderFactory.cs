@@ -10,7 +10,7 @@ namespace Pixelator.Api.Codec
 {
     internal class ImageDecoderFactory
     {
-        public ImageDecoderBase BuildDecoder(Stream imageReaderStream, DecodingConfiguration decodingConfiguration)
+        public IImageDecoder BuildDecoder(Stream imageReaderStream, DecodingConfiguration decodingConfiguration)
         {
             Header header;
 
@@ -37,6 +37,8 @@ namespace Pixelator.Api.Codec
             {
                 case Version.V1:
                     return new V1.ImageDecoder(decodingConfiguration);
+                case Version.V2:
+                    return new V2.ImageDecoder(decodingConfiguration);
                 default:
                     throw new UnsupportedVersionException(String.Format("File with version {0} is not supported", header.Version));
             }

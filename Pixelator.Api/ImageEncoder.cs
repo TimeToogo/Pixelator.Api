@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Pixelator.Api.Codec;
 using Pixelator.Api.Codec.Imaging;
 using Pixelator.Api.Configuration;
 using Directory = Pixelator.Api.Input.Directory;
@@ -18,26 +18,29 @@ namespace Pixelator.Api
         private readonly Dictionary<string, Directory> _directories = new Dictionary<string, Directory>() { {"\\", new Directory("\\")} };
         private Dictionary<string, string> _metadata = new Dictionary<string, string>();
         private readonly ImageFormat _format;
+        private readonly EmbeddedImage _embeddedImage;
 
-        public ImageEncoder(ImageFormat format) : this(format, null, null)
+        public ImageEncoder(ImageFormat format, EmbeddedImage embeddedImage = null)
+            : this(format, null, null, embeddedImage)
         {
         }
 
-        public ImageEncoder(ImageFormat format, CompressionConfiguration compressionConfiguration)
-            : this(format, null, compressionConfiguration)
+        public ImageEncoder(ImageFormat format, CompressionConfiguration compressionConfiguration, EmbeddedImage embeddedImage = null)
+            : this(format, null, compressionConfiguration, embeddedImage)
         {
         }
 
-        public ImageEncoder(ImageFormat format, EncryptionConfiguration encryptionConfiguration)
-            : this(format, encryptionConfiguration, null)
+        public ImageEncoder(ImageFormat format, EncryptionConfiguration encryptionConfiguration, EmbeddedImage embeddedImage = null)
+            : this(format, encryptionConfiguration, null, embeddedImage)
         {
         }
 
         public ImageEncoder(ImageFormat format, EncryptionConfiguration encryptionConfiguration,
-            CompressionConfiguration compressionConfiguration)
+            CompressionConfiguration compressionConfiguration, EmbeddedImage embeddedImage = null)
         {
             _encryptionConfiguration = encryptionConfiguration;
             _compressionConfiguration = compressionConfiguration;
+            _embeddedImage = embeddedImage;
             _format = format;
         }
 
@@ -72,6 +75,16 @@ namespace Pixelator.Api
         public ImageFormat Format
         {
             get { return _format; }
+        }
+
+        public bool HasEmbeddedImage
+        {
+            get { return _embeddedImage != null; }
+        }
+
+        public EmbeddedImage EmbeddedImage
+        {
+            get { return _embeddedImage; }
         }
 
         public string Extension
@@ -124,12 +137,13 @@ namespace Pixelator.Api
         {
             var imageConfiguration = new ImageConfiguration(
                 Format,
+                EmbeddedImage,
                 Directories,
                 Metadata,
                 EncryptionConfiguration,
                 CompressionConfiguration);
 
-            var encoder = new Codec.V1.ImageEncoder(encodingConfiguration);
+            var encoder = new Codec.V2.ImageEncoder(encodingConfiguration);
             await encoder.EncodeAsync(imageConfiguration, outputStream);
         }
     }

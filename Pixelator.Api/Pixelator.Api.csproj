@@ -46,6 +46,14 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Codec\IImageDecoder.cs" />
+    <Compile Include="Codec\Imaging\PixelStorageCalculator.cs" />
+    <Compile Include="Codec\Imaging\PixelStorageReaderStream.cs" />
+    <Compile Include="Codec\Imaging\PixelStorageStream.cs" />
+    <Compile Include="Codec\Imaging\PixelStorageWriterStream.cs" />
+    <Compile Include="Codec\Imaging\PixelStorageOptions.cs" />
+    <Compile Include="Codec\Layout\Serialization\PixelStorageOptionsSerializer.cs" />
+    <Compile Include="Codec\Streams\PaddedStream.cs" />
     <Compile Include="Codec\DataInfo.cs" />
     <Compile Include="Codec\ImageEncoderFactory.cs" />
     <Compile Include="Codec\ImageDecoderFactory.cs" />
@@ -109,6 +117,8 @@
     <Compile Include="Codec\Layout\Serialization\HeaderSerializer.cs" />
     <Compile Include="Codec\Layout\Serialization\Serializer.cs" />
     <Compile Include="Codec\Streams\InputStreamChainBuilder.cs" />
+    <Compile Include="Codec\V2\ImageDecoder.cs" />
+    <Compile Include="Codec\V2\ImageEncoder.cs" />
     <Compile Include="Codec\Version.cs" />
     <Compile Include="Common\Directory.cs" />
     <Compile Include="Configuration\CompressionConfiguration.cs" />
@@ -120,6 +130,8 @@
     <Compile Include="Exceptions\UnsupportedVersionException.cs" />
     <Compile Include="Exceptions\InvalidHeaderException.cs" />
     <Compile Include="ImageDecoder.cs" />
+    <Compile Include="EmbeddedImage.cs" />
+    <Compile Include="ImageFormatExtensions.cs" />
     <Compile Include="Input\Directory.cs" />
     <Compile Include="Configuration\EncryptionConfiguration.cs" />
     <Compile Include="Input\File.cs" />
@@ -151,6 +163,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

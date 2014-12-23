@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using Pixelator.Api.Codec.Layout;
 using Directory = Pixelator.Api.Input.Directory;
 using File = Pixelator.Api.Input.File;
 
@@ -10,6 +10,7 @@ namespace Pixelator.Api.Configuration
     public sealed class ImageConfiguration
     {
         private readonly ImageFormat _format;
+        private readonly EmbeddedImage _embeddedImage;
         private readonly IDictionary<string, string> _metadata;
         private readonly IReadOnlyCollection<Directory> _directories;
         private readonly EncryptionConfiguration _encryption;
@@ -17,6 +18,7 @@ namespace Pixelator.Api.Configuration
 
         public ImageConfiguration(
             ImageFormat format, 
+            EmbeddedImage embeddedImage,
             IEnumerable<Directory> directories,
             IDictionary<string, string> metadata,
             EncryptionConfiguration encryption,
@@ -45,6 +47,7 @@ namespace Pixelator.Api.Configuration
             }
 
             _format = format;
+            _embeddedImage = embeddedImage;
             _metadata = metadata;
             _directories = directoryList.AsReadOnly();
             _encryption = encryption;
@@ -54,6 +57,16 @@ namespace Pixelator.Api.Configuration
         public ImageFormat Format
         {
             get { return _format; }
+        }
+
+        public bool HasEmbeddedImage
+        {
+            get { return _embeddedImage != null; }
+        }
+
+        public EmbeddedImage EmbeddedImage
+        {
+            get { return _embeddedImage; }
         }
 
         public IDictionary<string, string> Metadata

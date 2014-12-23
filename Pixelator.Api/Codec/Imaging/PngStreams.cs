@@ -235,7 +235,7 @@ namespace Pixelator.Api.Codec.Imaging
 
             private void CalculateNextFilterByte()
             {
-                _nextFilterByte += (_imageWidth * Channels) + 1;//plus one because the filter byte adds to the byte count
+                _nextFilterByte += (_imageWidth * _Channels) + 1;//plus one because the filter byte adds to the byte count
                 _filterByteCount++;
             }
 
@@ -548,7 +548,7 @@ namespace Pixelator.Api.Codec.Imaging
 
             private void CalculateNextFilterByte()
             {
-                _nextFilterByte += (_imageWidth * Channels);
+                _nextFilterByte += (_imageWidth * _Channels);
 
                 _filterByteCount++;
             }

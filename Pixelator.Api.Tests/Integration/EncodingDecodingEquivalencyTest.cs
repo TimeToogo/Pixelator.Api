@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -26,6 +27,7 @@ namespace Pixelator.Api.Tests.Integration
             DirectoryInfo inputDirectory,
             EncryptionConfiguration encryption,
             CompressionConfiguration compression,
+            EmbeddedImage embeddedImage,
             IDictionary<string, string> metadata)
         {
             DirectoryInfo outputDirectory = null;
@@ -33,7 +35,7 @@ namespace Pixelator.Api.Tests.Integration
             {
                 using (var storageStream = new MemoryStream())
                 {
-                    var encoder = new ImageEncoder(format, encryption, compression);
+                    var encoder = new ImageEncoder(format, encryption, compression, embeddedImage);
 
                     encoder.Metadata = metadata;
                     encoder.AddDirectory(inputDirectory);

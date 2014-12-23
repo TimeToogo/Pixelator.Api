@@ -9,7 +9,7 @@ using File = Pixelator.Api.Output.File;
 
 namespace Pixelator.Api.Codec
 {
-    internal abstract class ImageDecoderBase : ImageTranscoderBase
+    internal abstract class ImageDecoderBase<TDataInfo> : ImageTranscoderBase, IImageDecoder where TDataInfo : DataInfo
     {
         private readonly DecodingConfiguration _decodingConfiguration;
 
@@ -23,7 +23,14 @@ namespace Pixelator.Api.Codec
             get { return _decodingConfiguration; }
         }
 
-        public async Task<DataInfo> ReadDataInfoAsync(Stream imageReaderStream)
+        public abstract Task<Stream> GetDataReaderStreamAsync(Stream imageReaderStream);
+
+        async Task<DataInfo> IImageDecoder.ReadDataInfoAsync(Stream imageReaderStream)
+        {
+            return await ReadDataInfoAsync(imageReaderStream);
+        }
+
+        public async Task<TDataInfo> ReadDataInfoAsync(Stream imageReaderStream)
         {
             if (imageReaderStream == null)
             {
@@ -40,9 +47,14 @@ namespace Pixelator.Api.Codec
             }
         }
 
-        protected abstract Task<DataInfo> _ReadDataInfoAsync(Stream imageReaderStream);
+        protected abstract Task<TDataInfo> _ReadDataInfoAsync(Stream imageReaderStream);
 
-        public async Task<IReadOnlyDictionary<File, Stream>> DecodeFileContentsAsync(DataInfo dataInfo, Stream imageReaderStream, IEnumerable<File> files)
+        public Task<IReadOnlyDictionary<File, Stream>> DecodeFileContentsAsync(DataInfo dataInfo, Stream imageReaderStream, IEnumerable<File> files)
+        {
+            return ((ImageDecoderBase<TDataInfo>)this).DecodeFileContentsAsync((TDataInfo)dataInfo, imageReaderStream, files);
+        }
+
+        public async Task<IReadOnlyDictionary<File, Stream>> DecodeFileContentsAsync(TDataInfo dataInfo, Stream imageReaderStream, IEnumerable<File> files)
         {
             if (dataInfo == null)
             {
@@ -69,6 +81,6 @@ namespace Pixelator.Api.Codec
             }
         }
 
-        protected abstract Task<IReadOnlyDictionary<File, Stream>> _DecodeFileContentsAsync(DataInfo dataInfo, Stream imageReaderStream, IEnumerable<File> files);
+        protected abstract Task<IReadOnlyDictionary<File, Stream>> _DecodeFileContentsAsync(TDataInfo dataInfo, Stream imageReaderStream, IEnumerable<File> files);
     }
 }

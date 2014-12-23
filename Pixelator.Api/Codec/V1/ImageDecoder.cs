@@ -15,7 +15,7 @@ using File = Pixelator.Api.Output.File;
 
 namespace Pixelator.Api.Codec.V1
 {
-    internal class ImageDecoder : ImageDecoderBase
+    internal class ImageDecoder : ImageDecoderBase<DataInfo>
     {
         private readonly ChunkReader _chunkReader;
 
@@ -27,6 +27,11 @@ namespace Pixelator.Api.Codec.V1
         public override Version Version
         {
             get { return Version.V1; }
+        }
+
+        public override Task<Stream> GetDataReaderStreamAsync(Stream imageReaderStream)
+        {
+            return Task.FromResult(imageReaderStream);
         }
 
         protected override async Task<DataInfo> _ReadDataInfoAsync(Stream imageReaderStream)

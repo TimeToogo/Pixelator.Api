@@ -36,9 +36,14 @@ namespace Pixelator.Api.Codec.Imaging
             get { return 4; }
         }
 
-        protected override PixelFormat PixelFormat
+        public override int Channels
         {
-            get { return PixelFormats.Bgra32; }
+            get { return 4; }
+        }
+
+        public override PixelFormat PixelFormat
+        {
+            get { return PixelFormats.Pbgra32; }
         }
 
         protected override BitmapEncoder GetEncoder(ImageOptions options)
@@ -48,7 +53,7 @@ namespace Pixelator.Api.Codec.Imaging
 
         protected override BitmapDecoder GetDecoder(Stream input)
         {
-            return new BmpBitmapDecoder(input, BitmapCreateOptions.None, BitmapCacheOption.None);
+            return new BmpBitmapDecoder(input, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
         }
     }
 }

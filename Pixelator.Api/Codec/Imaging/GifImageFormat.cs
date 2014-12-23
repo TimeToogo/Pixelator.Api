@@ -38,7 +38,12 @@ namespace Pixelator.Api.Codec.Imaging
             get { return 1; }
         }
 
-        protected override PixelFormat PixelFormat
+        public override int Channels
+        {
+            get { return 1; }
+        }
+
+        public override PixelFormat PixelFormat
         {
             get { return PixelFormats.Indexed8; }
         }
@@ -55,7 +60,7 @@ namespace Pixelator.Api.Codec.Imaging
 
         protected override BitmapDecoder GetDecoder(Stream input)
         {
-            return new GifBitmapDecoder(input, BitmapCreateOptions.None, BitmapCacheOption.None);
+            return new GifBitmapDecoder(input, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
         }
     }
 }

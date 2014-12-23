@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -72,10 +73,11 @@ namespace Pixelator.Api.Tests.Integration
             {
                 await
                     CreateVersionCompatData(
-                        (ImageFormat) config[0], 
-                        (DirectoryInfo) config[1],
-                        (EncryptionConfiguration) config[2], 
-                        (CompressionConfiguration) config[3]);
+                        (ImageFormat)config[0],
+                        (DirectoryInfo)config[1],
+                        (EncryptionConfiguration)config[2],
+                        (CompressionConfiguration)config[3],
+                        (Image)config[4]);
             }
         }
 
@@ -83,9 +85,15 @@ namespace Pixelator.Api.Tests.Integration
             ImageFormat format,
             DirectoryInfo inputDirectory,
             EncryptionConfiguration encryption,
-            CompressionConfiguration compression)
+            CompressionConfiguration compression,
+            Image embeddedImage)
         {
             string outputName = inputDirectory.Name.Substring(0, Math.Min(inputDirectory.Name.Length, 10)) + "-" + Enum.GetName(typeof(ImageFormat), format);
+            if (embeddedImage != null)
+            {
+                outputName += "-E";
+            }
+
             if (encryption != null)
             {
                 outputName += "-" + Enum.GetName(typeof(EncryptionType), encryption.Type).Substring(0, 3);

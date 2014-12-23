@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Media;
 using Pixelator.Api.Codec.Streams;
 
 namespace Pixelator.Api.Codec.Imaging
@@ -18,6 +22,17 @@ namespace Pixelator.Api.Codec.Imaging
         public abstract CompressionType? CompressionType { get; }
 
         public abstract int BytesPerPixel { get; }
+
+        public abstract int Channels { get; }
+
+        public abstract Stream LoadPixelDataStream(Bitmap source);
+
+        public PixelStorageOptions PixelStorageWithBitsPerChannel(byte bits, PixelStorageOptions.BitStorageMode storageMode)
+        {
+            return new PixelStorageOptions(Enumerable
+                .Range(0, Channels)
+                .Select(i => new PixelStorageOptions.ChannelStorageOptions(bits, storageMode)));
+        }
 
         public ImageWriter CreateWriter(ImageOptions options)
         {

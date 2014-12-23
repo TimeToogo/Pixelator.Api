@@ -60,6 +60,7 @@
     <Compile Include="Codec\Cryptography\Aes256EncryptionAlgorithmTest.cs" />
     <Compile Include="Codec\Imaging\GifImagingStreamTest.cs" />
     <Compile Include="Codec\Imaging\BmpImagingStreamTest.cs" />
+    <Compile Include="Codec\Imaging\PixelStorageStreamTest.cs" />
     <Compile Include="Codec\Imaging\PngImagingStreamTest.cs" />
     <Compile Include="Codec\Imaging\ImagingStreamTest.cs" />
     <Compile Include="Codec\Layout\AssertEx.cs" />
@@ -90,6 +91,7 @@
     <Folder Include="Codec\Compression\CompressionTestData\" />
     <Folder Include="Codec\Cryptography\CryptographyTestData\" />
     <Folder Include="Codec\Imaging\ImageTestData\" />
+    <Folder Include="Integration\EmbedImageTestData\" />
     <Folder Include="Integration\TestData\" />
     <Folder Include="Integration\VersionCompatData\V1\" />
     <Folder Include="Integration\VersionCompatData\__Original\" />
@@ -126,6 +128,7 @@
   <PropertyGroup>
     <PostBuildEvent>XCOPY "$(ProjectDir)Integration\TestData" "$(TargetDir)TestData\" /s /i /y /E
 XCOPY "$(ProjectDir)Integration\VersionCompatData" "$(TargetDir)VersionCompatData\" /s /i /y /E
+XCOPY "$(ProjectDir)Integration\EmbedImageTestData" "$(TargetDir)EmbedImageTestData\" /s /i /y /E
 XCOPY "$(ProjectDir)Codec\Imaging\ImageTestData" "$(TargetDir)ImageTestData\" /s /i /y /E
 XCOPY "$(ProjectDir)Codec\Cryptography\CryptographyTestData" "$(TargetDir)CryptographyTestData\" /s /i /y /E
 XCOPY "$(ProjectDir)Codec\Compression\CompressionTestData" "$(TargetDir)CompressionTestData\" /s /i /y /E</PostBuildEvent>

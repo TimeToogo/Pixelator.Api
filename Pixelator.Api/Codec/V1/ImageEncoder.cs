@@ -35,12 +35,22 @@ namespace Pixelator.Api.Codec.V1
             get { return new IsoPadding(); }
         }
 
-        public override ImageDimensionsCalculator ImageDimensionsCalculator
+        public override ImageDimensionsCalculator GetImageDimensionsCalculator(int? imageWidth)
         {
-            get { return new ImageDimensionsCalculator(200); }
+            return new ImageDimensionsCalculator(
+                imageWidthFrameThreshold: 200,
+                imageWidth: imageWidth);
         }
 
-        public async override Task EncodeAsync(ImageConfiguration configuration, Stream output)
+        protected override void ValidateConfiguration(ImageConfiguration configuration)
+        {
+            if (configuration.HasEmbeddedImage)
+            {
+                throw new InvalidOperationException("V1 encoder does not support embedded images.");
+            }
+        }
+
+        protected async override Task ExecuteEncodeAsync(ImageConfiguration configuration, Stream output)
         {
             var chunkLayoutBuilder = new ChunkLayoutBuilder();
 
@@ -75,22 +85,47 @@ namespace Pixelator.Api.Codec.V1
 
             ChunkLayout chunkLayout = await chunkLayoutBuilder.BuildAsync();
             var chunkLayoutBytes = await new ChunkLayoutSerializer().SerializeToBytesAsync(chunkLayout);
+            
+            long totalLength = CalculateTotalLength(chunkLayoutBytes, chunkLayout);
 
-            long totalLength = HeaderBytes.LongLength + chunkLayoutBytes.LongLength + chunkLayout.TotalProcessedLength;
-
-            using (Stream imageStream = CreateImageWriterStream(configuration, output, totalLength))
+            using (Stream imageStream = await CreateImageWriterStreamAsync(configuration, output, totalLength))
             {
-                await WriteHeaderAsync(imageStream);
-                await imageStream.WriteAsync(chunkLayoutBytes, 0, chunkLayoutBytes.Length);
+                await WriteBodyData(imageStream, chunkLayoutBytes, chunkLayoutBuilder);
+            }
+        }
 
-                foreach (KeyValuePair<ChunkInfo, Stream> chunkData in await chunkLayoutBuilder.LoadChunksAsync())
-                {
-                    Stream dataStream = chunkData.Value;
-                    dataStream.Position = 0;
-                    await dataStream.CopyToAsync(imageStream, EncodingConfiguration.BufferSize);
-                }
+        protected virtual long CalculateTotalLength(byte[] chunkLayoutBytes, ChunkLayout chunkLayout)
+        {
+            return HeaderBytes.LongLength + chunkLayoutBytes.LongLength + chunkLayout.TotalProcessedLength;
+        }
 
-                await WritePaddingAsync(imageStream);
+        protected virtual async Task<Stream> CreateImageWriterStreamAsync(ImageConfiguration configuration, Stream output, long totalBytes)
+        {
+            Imaging.ImageFormat imageFormat = ImageFormatFactory.GetFormat(configuration.Format);
+            ImageOptions imageOptions = GenerateImageOptions(configuration, null, totalBytes);
+
+            Stream imageStream = imageFormat.CreateWriter(imageOptions).CreateOutputStream(output, true, EncodingConfiguration.BufferSize);
+            await WriteHeaderAsync(imageStream);
+
+            return imageStream;
+        }
+
+        protected virtual async Task WriteBodyData(Stream imageStream, byte[] chunkLayoutBytes, ChunkLayoutBuilder chunkLayoutBuilder)
+        {
+            await imageStream.WriteAsync(chunkLayoutBytes, 0, chunkLayoutBytes.Length);
+
+            await WriteChunkData(imageStream, chunkLayoutBuilder);
+
+            await WritePaddingAsync(imageStream);
+        }
+
+        protected virtual async Task WriteChunkData(Stream imageStream, ChunkLayoutBuilder chunkLayoutBuilder)
+        {
+            foreach (KeyValuePair<ChunkInfo, Stream> chunkData in await chunkLayoutBuilder.LoadChunksAsync())
+            {
+                Stream dataStream = chunkData.Value;
+                dataStream.Position = 0;
+                await dataStream.CopyToAsync(imageStream, EncodingConfiguration.BufferSize);
             }
         }
     }

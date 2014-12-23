@@ -20,7 +20,7 @@ namespace Pixelator.Api
         private Stream _rawStream;
         private DecodingConfiguration _decodingConfiguration;
         private Stream _imageReaderStream;
-        private ImageDecoderBase _imageDecoder;
+        private IImageDecoder _imageDecoder;
         private DataInfo _dataInfo;
 
         private ImageDecoder()
@@ -46,17 +46,18 @@ namespace Pixelator.Api
             decoder._originalPosition = imageStream.Position;
             decoder._decodingConfiguration = decodingConfiguration;
             decoder._imageFormat = new ImageFormatFactory().GetFormatFromStream(imageStream);
-            decoder.LoadDecoder();
+            await decoder.LoadDecoderAsync();
             decoder._dataInfo = await decoder._imageDecoder.ReadDataInfoAsync(decoder._imageReaderStream);
 
             return decoder;
         }
 
-        private void LoadDecoder()
+        private async Task LoadDecoderAsync()
         {
             _rawStream.Position = _originalPosition;
-            _imageReaderStream = _imageFormat.CreateReader().CreateInputStream(_rawStream, true);
-            _imageDecoder = _imageDecoderFactory.BuildDecoder(_imageReaderStream, _decodingConfiguration);
+            Stream rawImageReaderStream = _imageFormat.CreateReader().CreateInputStream(_rawStream, true);
+            _imageDecoder = _imageDecoderFactory.BuildDecoder(rawImageReaderStream, _decodingConfiguration);
+            _imageReaderStream = await _imageDecoder.GetDataReaderStreamAsync(rawImageReaderStream);
         }
 
         public Stream ImageStream

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -38,10 +39,31 @@ namespace Pixelator.Api.Codec
             get { return _headerBytes; }
         }
 
-        public abstract Task EncodeAsync(ImageConfiguration configuration, Stream output);
+        public Task EncodeAsync(ImageConfiguration configuration, Stream output)
+        {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException("configuration");
+            }
+
+            if (output == null)
+            {
+                throw new ArgumentNullException("output");
+            }
+
+            ValidateConfiguration(configuration);
+            return ExecuteEncodeAsync(configuration, output);
+        }
+
+        protected abstract Task ExecuteEncodeAsync(ImageConfiguration configuration, Stream output);
+
+        protected virtual void ValidateConfiguration(ImageConfiguration configuration)
+        {
+
+        }
 
         public abstract Padding Padding { get; }
-        public abstract ImageDimensionsCalculator ImageDimensionsCalculator { get; }
+        public abstract ImageDimensionsCalculator GetImageDimensionsCalculator(int? imageWidth);
 
         protected Chunk<TBody> GenerateChunk<TBody>(StructureType type, ImageConfiguration configuration, TBody body)
             where TBody : class
@@ -85,11 +107,11 @@ namespace Pixelator.Api.Codec
                    configuration.Compression.Type;
         }
 
-        protected ImageOptions GenerateImageOptions(ImageConfiguration configuration, long totalBytes)
+        protected ImageOptions GenerateImageOptions(ImageConfiguration configuration, int? imageWidth, long totalBytes, PixelStorageOptions pixelStorageOptions = null)
         {
             return new ImageOptions(
                 CanUseImageFormatCompression(configuration) ? configuration.Compression.Level : (CompressionLevel?)null,
-                ImageDimensionsCalculator.Calculate(ImageFormatFactory.GetFormat(configuration.Format), totalBytes));
+                GetImageDimensionsCalculator(imageWidth).Calculate(ImageFormatFactory.GetFormat(configuration.Format), totalBytes, pixelStorageOptions));
         }
         
         protected IDictionary<Input.File, Output.File> MapFiles(IEnumerable<File> files)
@@ -107,14 +129,6 @@ namespace Pixelator.Api.Codec
                     directory => new Output.Directory(
                         directory.Path,
                         directory.Files.Select(file => mappedFiles[file])));
-        }
-
-        protected Stream CreateImageWriterStream(ImageConfiguration configuration, Stream output, long totalBytes)
-        {
-            Imaging.ImageFormat imageFormat = ImageFormatFactory.GetFormat(configuration.Format);
-            ImageOptions imageOptions = GenerateImageOptions(configuration, totalBytes);
-
-            return imageFormat.CreateWriter(imageOptions).CreateOutputStream(output, true, EncodingConfiguration.BufferSize);
         }
 
         protected async Task WriteHeaderAsync(Stream stream)
