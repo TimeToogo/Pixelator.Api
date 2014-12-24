@@ -28,6 +28,12 @@ namespace Pixelator.Api.Codec.Imaging
             _remainderBytes = new byte[_channelBytesPerUnit];
         }
 
+        public override long Position
+        {
+            get { return base.Position + _remainderBytesAmount; }
+            set { base.Position = value; }
+        }
+
         public override void Write(byte[] buffer, int offset, int count)
         {
             int bytesAvailable = count + _remainderBytesAmount;
@@ -40,11 +46,7 @@ namespace Pixelator.Api.Codec.Imaging
 
             if (newRemainderBytesAmount != 0)
             {
-                try
-                {
-                    Array.Copy(buffer, offset + bytesInDivisibleUnitAmount, _remainderBytes, 0, newRemainderBytesAmount);
-                }
-                catch { }
+                Array.Copy(buffer, offset + bytesInDivisibleUnitAmount - 1, _remainderBytes, 0, newRemainderBytesAmount);
             }
 
             _remainderBytesAmount = newRemainderBytesAmount;
@@ -74,7 +76,7 @@ namespace Pixelator.Api.Codec.Imaging
                 }
             }
 
-            _position += bytesInDivisibleUnitAmount + _remainderBytesAmount;
+            _position += bytesInDivisibleUnitAmount;
             _imageFormatterStream.Write(finalBytes, 0, finalByteCount);
         }
 
