@@ -54,29 +54,18 @@ namespace Pixelator.Api.Codec.Imaging
                 {
                     throw new ArgumentOutOfRangeException("bits", "cannot be greater than eight");
                 }
-
-                if (8 % bits != 0)
-                {
-                    throw new ArgumentOutOfRangeException("bits", "musy be a divisor of eight");
-                }
-
+                
                 _bits = bits;
                 _storageMode = storageMode;
                 _byteMask = 0;
 
                 if (storageMode == BitStorageMode.LeastSignificantBits)
                 {
-                    do
-                    {
-                        _byteMask |= (byte)(255 >> bits);
-                    } while (bits-- > 0);
+                    _byteMask = (byte)unchecked(255 >> (8 - bits));
                 }
                 else
                 {
-                    do
-                    {
-                        _byteMask |= (byte)(1 << bits);
-                    } while (bits-- > 0);
+                    _byteMask = (byte)unchecked(255 << (8 - bits));
                 }
             }
 

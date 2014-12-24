@@ -15,39 +15,63 @@ namespace Pixelator.Api.Codec.Imaging
         {
             if (embeddedImagedDataStream != null)
             {
-                _embeddedImagedDataStream = new PaddedStream(embeddedImagedDataStream,
-                    Math.Max(embeddedImagedDataStream.Length, imageFormatterStream.Length));
+                _embeddedImagedDataStream = new PaddedStream(
+                    embeddedImagedDataStream,
+                    paddingValue: 0,
+                    paddingLength: null); // Infinite padding
             }
             else
             {
-                _embeddedImagedDataStream = new PaddedStream(new MemoryStream(), imageFormatterStream.Position);
+                _embeddedImagedDataStream = new ConstantStream(0);
             }
+
+            _remainderBytes = new byte[_channelBytesPerUnit];
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            byte[] bytesToWrite = new byte[count];
+            int bytesAvailable = count + _remainderBytesAmount;
+            int bytesInDivisibleUnitAmount = bytesAvailable - (bytesAvailable % _bytesPerUnit);
+            int newRemainderBytesAmount = bytesAvailable - bytesInDivisibleUnitAmount;
+            byte[] bytesToWrite = new byte[bytesInDivisibleUnitAmount];
+            
+            Array.Copy(_remainderBytes, 0, bytesToWrite, 0, _remainderBytesAmount);
+            Array.Copy(buffer, offset, bytesToWrite, _remainderBytesAmount, bytesInDivisibleUnitAmount - _remainderBytesAmount);
 
-            Array.Copy(buffer, offset, bytesToWrite, 0, count);
-
-            List<byte> storedBytes = new List<byte>();
-            for (int i = 0; i < bytesToWrite.Length; i++)
+            if (newRemainderBytesAmount != 0)
             {
-                byte dataByte = bytesToWrite[i];
-                for (byte bitStart = 0; bitStart < 8;)
-                {
-                    ByteChannelMask channelMask = _channelMasks[_pixelDataPosition % _channelMasks.Length];
-                    byte dataSectionByte = (byte)(unchecked(dataByte >> bitStart) & channelMask.Mask);
-                    var embeddedByte = (byte) _embeddedImagedDataStream.ReadByte();
-                    storedBytes.Add((byte)((embeddedByte & ~channelMask.Mask) | dataSectionByte));
+                Array.Copy(buffer, offset + bytesInDivisibleUnitAmount, _remainderBytes, 0, newRemainderBytesAmount);
+            }
 
-                    bitStart += channelMask.Bits;
-                    _pixelDataPosition++;
+            _remainderBytesAmount = newRemainderBytesAmount;
+
+            if (bytesInDivisibleUnitAmount == 0)
+            {
+                return;
+            }
+
+            byte[] finalBytes = new byte[bytesToWrite.Length * _channelBytesPerUnit];
+            int finalByteCount = 0;
+            for (int i = 0; i < bytesToWrite.Length;)
+            {
+                foreach (ByteChannelBits[] currentByteChannelBits in _unitChannelBits)
+                {
+                    byte dataByte = bytesToWrite[i];
+                    foreach (ByteChannelBits channelBits in currentByteChannelBits)
+                    {
+                        byte dataSectionByte = channelBits.GetChannelBits(dataByte);
+                        var embeddedByte = (byte)_embeddedImagedDataStream.ReadByte();
+                        finalBytes[finalByteCount] = (byte)((embeddedByte & ~channelBits.Mask) | dataSectionByte);
+
+                        _channelDataPosition++;
+                        finalByteCount++;
+                    }
+                    i++;
                 }
             }
 
-            _position += count;
-            _imageFormatterStream.Write(storedBytes.ToArray(), 0, storedBytes.Count);
+            _position += bytesInDivisibleUnitAmount;
+            _imageFormatterStream.Write(finalBytes, 0, finalByteCount);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -63,6 +87,18 @@ namespace Pixelator.Api.Codec.Imaging
         public override bool CanWrite
         {
             get { return true; }
+        }
+
+        public override void Close()
+        {
+            if (_remainderBytesAmount != 0)
+            {
+                throw new InvalidOperationException(
+                    "Cannot close pixel storage stream as the final bytes cannot be written due " +
+                    "to being indivisible with the given pixel storage options");
+            }
+
+            base.Close();
         }
     }
 }

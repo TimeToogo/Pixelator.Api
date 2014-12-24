@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Pixelator.Api.Codec.Streams;
 
 namespace Pixelator.Api.Codec.Imaging
 {
@@ -11,65 +9,93 @@ namespace Pixelator.Api.Codec.Imaging
         public PixelStorageReaderStream(Stream imageFormatterStream, PixelStorageOptions storageOptions, bool leaveOpen) :
             base(imageFormatterStream, storageOptions, leaveOpen)
         {
+
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            long bitsWanted = count * 8;
-            int bytesWantedToRead = 0;
-            long bitsThatWillHaveBeenRead = 0;
-
-            while (bitsThatWillHaveBeenRead < bitsWanted)
+            if (count <= _remainderBytesAmount)
             {
-                foreach (ByteChannelMask channelMask in _channelMasks)
-                {
-                    bitsThatWillHaveBeenRead += channelMask.Bits;
-                    bytesWantedToRead++;
+                Array.Copy(_remainderBytes, 0, buffer, offset, count);
+                Array.Copy(_remainderBytes, count, _remainderBytes, 0, _remainderBytesAmount - count);
+                _remainderBytesAmount -= count;
+                return count;
+            }
 
-                    if (bitsThatWillHaveBeenRead >= bitsWanted)
+            int bytesWanted = count - _remainderBytesAmount;
+            int bytesInDivisibleUnitAmount = bytesWanted % _channelBytesPerUnit == 0 ? bytesWanted : bytesWanted + _channelBytesPerUnit - (bytesWanted % _channelBytesPerUnit);
+
+            byte[] channelDataBytes = new byte[(bytesInDivisibleUnitAmount / _bytesPerUnit) * _channelBytesPerUnit];
+
+            int bytesRead = 0;
+            int currentBytesRead;
+            while ((currentBytesRead = _imageFormatterStream.Read(channelDataBytes, bytesRead, channelDataBytes.Length - bytesRead)) > 0)
+            {
+                bytesRead += currentBytesRead;
+            }
+
+            if (bytesRead % _channelBytesPerUnit != 0)
+            {
+                throw new EndOfStreamException(
+                    "The underlying stream did not return an amount of bytes divisible " +
+                    "by the channel unit amount from the given pixel storage options");
+            }
+
+            Array.Copy(_remainderBytes, 0, buffer, offset, _remainderBytesAmount);
+            offset += _remainderBytesAmount;
+            count -= _remainderBytesAmount;
+            int previousRemainderBytesCount = _remainderBytesAmount;
+            _remainderBytesAmount = 0;
+
+            int finalByteCount = 0;
+            if (bytesRead != 0)
+            {
+                int channelBytesReadIndex = 0;
+                bool done = false;
+                while (!done)
+                {
+                    foreach (ByteChannelBits[] currentByteChannelBits in _unitChannelBits)
                     {
-                        break;
+                        byte dataByte = 0;
+
+                        foreach (ByteChannelBits channelBits in currentByteChannelBits)
+                        {
+                            byte channelByte = channelDataBytes[channelBytesReadIndex];
+                            byte bitSectionData = channelBits.GetOriginalBits(channelByte);
+
+                            dataByte |= bitSectionData;
+
+                            _channelDataPosition++;
+                            channelBytesReadIndex++;
+                        }
+
+                        if (finalByteCount < count)
+                        {
+                            buffer[finalByteCount + offset] = dataByte;
+                        }
+                        else
+                        {
+                            if (_remainderBytes.Length <= finalByteCount - count)
+                            {
+                                
+                            }
+                            _remainderBytes[finalByteCount - count] = dataByte;
+                            _remainderBytesAmount++;
+                        }
+
+                        finalByteCount++;
+                        _position++;
+
+                        if (channelBytesReadIndex >= bytesRead)
+                        {
+                            done = true;
+                            break;
+                        }
                     }
                 }
             }
-            
-            byte[] pixelBytes = new byte[bytesWantedToRead];
-            int bytesRead = 0;
-            while (bytesRead < bytesWantedToRead)
-            {
-                int currentRead;
-                bytesRead += (currentRead = _imageFormatterStream.Read(pixelBytes, bytesRead, bytesWantedToRead - bytesRead));
-                if (currentRead == 0)
-                {
-                    throw new EndOfStreamException();
-                }
-            }
 
-            int pixelByteCount = 0;
-            for (int i = offset; i < offset + count; i++)
-            {
-                byte dataByte = 0;
-
-                for (byte bitStart = 0; bitStart < 8;)
-                {
-                    ByteChannelMask channelMask = _channelMasks[_pixelDataPosition % _channelMasks.Length];
-                    byte pixelByte = pixelBytes[pixelByteCount];
-
-                    byte bitSectionData = (byte)unchecked ((pixelByte & channelMask.Mask) << bitStart);
-
-                    dataByte |= bitSectionData;
-
-                    bitStart += channelMask.Bits;
-                    _pixelDataPosition++;
-                    pixelByteCount++;
-                }
-
-                buffer[i] = dataByte;
-                _position++;
-            }
-
-            //TODO: finish on end of stream.
-            return count;
+            return previousRemainderBytesCount + finalByteCount - _remainderBytesAmount;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
