@@ -63,7 +63,7 @@ namespace Pixelator.Api.Codec
         }
 
         public abstract Padding Padding { get; }
-        public abstract ImageDimensionsCalculator GetImageDimensionsCalculator(int? imageWidth);
+        public abstract ImageDimensionsCalculator GetImageDimensionsCalculator(int? imageWidth, int? minHeight);
 
         protected Chunk<TBody> GenerateChunk<TBody>(StructureType type, ImageConfiguration configuration, TBody body)
             where TBody : class
@@ -107,11 +107,16 @@ namespace Pixelator.Api.Codec
                    configuration.Compression.Type;
         }
 
-        protected ImageOptions GenerateImageOptions(ImageConfiguration configuration, int? imageWidth, long totalBytes, PixelStorageOptions pixelStorageOptions = null)
+        protected ImageOptions GenerateImageOptions(
+            ImageConfiguration configuration, 
+            int? imageWidth,
+            int? minHeight,
+            long totalBytes, 
+            PixelStorageOptions pixelStorageOptions = null)
         {
             return new ImageOptions(
                 CanUseImageFormatCompression(configuration) ? configuration.Compression.Level : (CompressionLevel?)null,
-                GetImageDimensionsCalculator(imageWidth).Calculate(ImageFormatFactory.GetFormat(configuration.Format), totalBytes, pixelStorageOptions));
+                GetImageDimensionsCalculator(imageWidth, minHeight).Calculate(ImageFormatFactory.GetFormat(configuration.Format), totalBytes, pixelStorageOptions));
         }
         
         protected IDictionary<Input.File, Output.File> MapFiles(IEnumerable<File> files)

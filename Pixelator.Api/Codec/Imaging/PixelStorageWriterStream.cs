@@ -40,7 +40,11 @@ namespace Pixelator.Api.Codec.Imaging
 
             if (newRemainderBytesAmount != 0)
             {
-                Array.Copy(buffer, offset + bytesInDivisibleUnitAmount, _remainderBytes, 0, newRemainderBytesAmount);
+                try
+                {
+                    Array.Copy(buffer, offset + bytesInDivisibleUnitAmount, _remainderBytes, 0, newRemainderBytesAmount);
+                }
+                catch { }
             }
 
             _remainderBytesAmount = newRemainderBytesAmount;
@@ -70,7 +74,7 @@ namespace Pixelator.Api.Codec.Imaging
                 }
             }
 
-            _position += bytesInDivisibleUnitAmount;
+            _position += bytesInDivisibleUnitAmount + _remainderBytesAmount;
             _imageFormatterStream.Write(finalBytes, 0, finalByteCount);
         }
 

@@ -19,6 +19,7 @@ namespace Pixelator.Api.Codec.Imaging
                 Array.Copy(_remainderBytes, 0, buffer, offset, count);
                 Array.Copy(_remainderBytes, count, _remainderBytes, 0, _remainderBytesAmount - count);
                 _remainderBytesAmount -= count;
+                _position += count;
                 return count;
             }
 
@@ -75,16 +76,11 @@ namespace Pixelator.Api.Codec.Imaging
                         }
                         else
                         {
-                            if (_remainderBytes.Length <= finalByteCount - count)
-                            {
-                                
-                            }
                             _remainderBytes[finalByteCount - count] = dataByte;
                             _remainderBytesAmount++;
                         }
 
                         finalByteCount++;
-                        _position++;
 
                         if (channelBytesReadIndex >= bytesRead)
                         {
@@ -95,7 +91,32 @@ namespace Pixelator.Api.Codec.Imaging
                 }
             }
 
-            return previousRemainderBytesCount + finalByteCount - _remainderBytesAmount;
+            int finalBytesReturned = previousRemainderBytesCount + finalByteCount - _remainderBytesAmount;
+            _position += finalBytesReturned;
+
+            return finalBytesReturned;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            long newOffset = 0;
+            switch (origin)
+            {
+                case SeekOrigin.Begin:
+                    newOffset = offset;
+                    break;
+                case SeekOrigin.Current:
+                    newOffset = Position + offset;
+                    break;
+                case SeekOrigin.End:
+                    newOffset = Length + offset;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException("origin");
+            }
+
+            return base.Seek(offset, origin);
         }
 
         public override void Write(byte[] buffer, int offset, int count)

@@ -8,6 +8,7 @@ namespace Pixelator.Api.Codec.Imaging
     internal abstract class PixelStorageStream : Stream
     {
         protected readonly Stream _imageFormatterStream;
+        protected readonly long _imageFormatterStreamStartPosition;
         protected readonly PixelStorageOptions _storageOptions;
         protected readonly ByteChannelBits[][] _unitChannelBits;
         protected readonly bool _leaveOpen;
@@ -31,6 +32,7 @@ namespace Pixelator.Api.Codec.Imaging
             }
 
             _imageFormatterStream = imageFormatterStream;
+            _imageFormatterStreamStartPosition = _imageFormatterStream.Position;
 
             _storageOptions = storageOptions;
             _leaveOpen = leaveOpen;
@@ -92,6 +94,16 @@ namespace Pixelator.Api.Codec.Imaging
             }
         }
 
+        public override long Length
+        {
+            get { return ((_imageFormatterStream.Length - _imageFormatterStreamStartPosition) / _channelBytesPerUnit) * _bytesPerUnit; }
+        }
+
+        public Stream ImageFormatterStream
+        {
+            get { return _imageFormatterStream; }
+        }
+
         public int ChannelBytesPerUnit
         {
             get { return _channelBytesPerUnit; }
@@ -105,11 +117,6 @@ namespace Pixelator.Api.Codec.Imaging
         public override bool CanSeek
         {
             get { return false; }
-        }
-
-        public override long Length
-        {
-            get { return _imageFormatterStream.Length; }
         }
 
         public override long Position

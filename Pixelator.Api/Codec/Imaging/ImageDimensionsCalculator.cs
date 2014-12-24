@@ -7,11 +7,13 @@ namespace Pixelator.Api.Codec.Imaging
     {
         private readonly int _imageWidthFrameThreshold;
         private readonly int? _imageWidth;
+        private readonly int? _minHeight;
 
-        public ImageDimensionsCalculator(int imageWidthFrameThreshold, int? imageWidth = null)
+        public ImageDimensionsCalculator(int imageWidthFrameThreshold, int? imageWidth = null, int? minHeight = null)
         {
             _imageWidthFrameThreshold = imageWidthFrameThreshold;
             _imageWidth = imageWidth;
+            _minHeight = minHeight;
         }
 
         public ImageDimensions Calculate(ImageFormat format, long totalBytes, PixelStorageOptions storageOptions = null)
@@ -23,7 +25,7 @@ namespace Pixelator.Api.Codec.Imaging
 
             int bitsPerPixel = storageOptions == null
                 ? format.BytesPerPixel * 8
-                : storageOptions.Channels.Sum(channel => channel.Bits);
+                : storageOptions.BitsPerPixel;
             long pixelsRequired = (long)Math.Ceiling(totalBytes / (bitsPerPixel / 8.0));
 
             int frames = _imageWidth.HasValue ? 1 : (int)Math.Ceiling(format.SupportsFrames ? pixelsRequired / Math.Pow(_imageWidthFrameThreshold, 2) : 1);
@@ -31,7 +33,12 @@ namespace Pixelator.Api.Codec.Imaging
             int imageWidth = _imageWidth ?? (int)Math.Floor(Math.Sqrt(pixelsRequired / frames));
             var imageHeight = (int)(pixelsRequired / (imageWidth * frames));
 
-            while (Math.BigMul(imageHeight, imageWidth * format.BytesPerPixel * frames) <= totalBytes)
+            if (_minHeight.HasValue && imageHeight < _minHeight)
+            {
+                imageHeight = _minHeight.Value;
+            }
+
+            while (Math.BigMul(imageHeight, (int)Math.Floor(imageWidth * (bitsPerPixel / 8.0) * frames)) <= totalBytes)
             {
                 imageHeight++;
             }

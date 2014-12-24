@@ -20,7 +20,7 @@ namespace Pixelator.Api.Codec.Imaging
         public override Stream LoadPixelDataStream(Bitmap source)
         {
             var bitmap = ConvertBitmap(source);
-            FormatConvertedBitmap formattedBitmap = new FormatConvertedBitmap(bitmap, PixelFormat, Palette, 100);
+            FormatConvertedBitmap formattedBitmap = new FormatConvertedBitmap(bitmap, PixelFormat, Palette, 0);
             byte[] bytes = new byte[bitmap.PixelWidth * bitmap.PixelHeight * BytesPerPixel];
             formattedBitmap.CopyPixels(new Int32Rect(0, 0, formattedBitmap.PixelWidth, formattedBitmap.PixelHeight), bytes, formattedBitmap.PixelWidth * BytesPerPixel, 0);
 

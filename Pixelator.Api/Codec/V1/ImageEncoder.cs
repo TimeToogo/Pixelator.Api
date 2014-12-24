@@ -35,11 +35,12 @@ namespace Pixelator.Api.Codec.V1
             get { return new IsoPadding(); }
         }
 
-        public override ImageDimensionsCalculator GetImageDimensionsCalculator(int? imageWidth)
+        public override ImageDimensionsCalculator GetImageDimensionsCalculator(int? imageWidth, int? minHeight)
         {
             return new ImageDimensionsCalculator(
                 imageWidthFrameThreshold: 200,
-                imageWidth: imageWidth);
+                imageWidth: imageWidth,
+                minHeight: minHeight);
         }
 
         protected override void ValidateConfiguration(ImageConfiguration configuration)
@@ -86,11 +87,18 @@ namespace Pixelator.Api.Codec.V1
             ChunkLayout chunkLayout = await chunkLayoutBuilder.BuildAsync();
             var chunkLayoutBytes = await new ChunkLayoutSerializer().SerializeToBytesAsync(chunkLayout);
             
-            long totalLength = CalculateTotalLength(chunkLayoutBytes, chunkLayout);
+            long totalLength = CalculateTotalLength(chunkLayoutBytes, chunkLayout) + 1; //Plus one to force room for padding
 
             using (Stream imageStream = await CreateImageWriterStreamAsync(configuration, output, totalLength))
             {
-                await WriteBodyData(imageStream, chunkLayoutBytes, chunkLayoutBuilder);
+                try
+                {
+
+                    await WriteBodyData(imageStream, chunkLayoutBytes, chunkLayoutBuilder);
+                }
+                catch
+                {
+                }
             }
         }
 
@@ -102,7 +110,7 @@ namespace Pixelator.Api.Codec.V1
         protected virtual async Task<Stream> CreateImageWriterStreamAsync(ImageConfiguration configuration, Stream output, long totalBytes)
         {
             Imaging.ImageFormat imageFormat = ImageFormatFactory.GetFormat(configuration.Format);
-            ImageOptions imageOptions = GenerateImageOptions(configuration, null, totalBytes);
+            ImageOptions imageOptions = GenerateImageOptions(configuration, null, null, totalBytes);
 
             Stream imageStream = imageFormat.CreateWriter(imageOptions).CreateOutputStream(output, true, EncodingConfiguration.BufferSize);
             await WriteHeaderAsync(imageStream);

@@ -43,7 +43,7 @@ namespace Pixelator.Api.Codec.Imaging
 
         public override PixelFormat PixelFormat
         {
-            get { return PixelFormats.Pbgra32; }
+            get { return PixelFormats.Bgr32; }
         }
 
         protected override BitmapEncoder GetEncoder(ImageOptions options)
