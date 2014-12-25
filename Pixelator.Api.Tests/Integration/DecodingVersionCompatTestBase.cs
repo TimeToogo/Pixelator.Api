@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -77,7 +76,7 @@ namespace Pixelator.Api.Tests.Integration
                         (DirectoryInfo)config[1],
                         (EncryptionConfiguration)config[2],
                         (CompressionConfiguration)config[3],
-                        (Image)config[4]);
+                        (EmbeddedImage)config[4]);
             }
         }
 
@@ -86,7 +85,7 @@ namespace Pixelator.Api.Tests.Integration
             DirectoryInfo inputDirectory,
             EncryptionConfiguration encryption,
             CompressionConfiguration compression,
-            Image embeddedImage)
+            EmbeddedImage embeddedImage)
         {
             string outputName = inputDirectory.Name.Substring(0, Math.Min(inputDirectory.Name.Length, 10)) + "-" + Enum.GetName(typeof(ImageFormat), format);
             if (embeddedImage != null)
@@ -105,7 +104,7 @@ namespace Pixelator.Api.Tests.Integration
             }
 
             DirectoryInfo outputDirectory = _ouputTempVersionDataDirectory.CreateSubdirectory(outputName);
-            var encoder = new ImageEncoder(format, encryption, compression);
+            var encoder = new ImageEncoder(format, encryption, compression, embeddedImage);
             using (Stream encodedImageFile = File.Create(Path.Combine(outputDirectory.FullName, inputDirectory.Name + "." + encoder.Extension)))
             {
                 encoder.AddDirectory(inputDirectory);

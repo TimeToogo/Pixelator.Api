@@ -1,0 +1,111 @@
+PINQ V3 and the future of language integrated query.
+====================================================
+
+Hello php community,
+
+
+I am glad to announce **V3 of PINQ (PHP Integrated query)** has now officially been tagged.
+There has been a massive overhaul internally along with some API changes.
+PINQ is still compatible with >= PHP 5.4
+
+
+**The big updates:**
+
+* Proper support for non scalar keys and handling, any variable type is able to be used as traversable/collection indexes.
+
+* Refactored iterator structure, automatically will switch to using generators when using PHP 5.5 for a nice performance boost.
+
+* New and improved mutable collection API is now interoperable with all query methods:
+
+        $collection
+            ->where(function ($i) { return $i >= 5; })
+            ->apply(function (&$i) { $i *= 10; });
+
+* Large improvements to the structure of the query provider API.
+
+You can find the [repo here on github](https://github.com/TimeToogo/Pinq).
+A more detailed change list can be found [here](http://timetoogo.github.io/Pinq/v3.html).
+
+**PINQ to SQL (Penumbra)**
+
+PINQ provides a DSL for array/iterator list comprehensions, it can be viewed as a declarative SQL-like language in PHP.
+
+I am contemplating implementing a library capable of mapping PINQ queries from PHP to SQL. 
+The implications are quite exciting in my eyes, this would allow you to write decoupled database queries while utilizing PHP functionality and operators.
+
+Using the introductory example from the [official site](http://timetoogo.github.io/Pinq):
+
+    $peopleTable
+            ->where(function ($row) { return $row['age'] <= 50; })
+            ->orderByAscending(function ($row) { return $row['firstName']; })
+            ->thenByAscending(function ($row) { return $row['lastName']; })
+            ->take(50)
+            ->indexBy(function ($row) { return $row['phoneNumber']; })
+            ->select(function ($row) { 
+                return [
+                    'fullName'    => $row['firstName'] . ' ' . $row['lastName'],
+                    'address'     => $row['address'],
+                    'dateOfBirth' => $row['dateOfBirth'],
+                ]; 
+            });
+
+Would be converted to SQL along the lines of:
+
+    SELECT 
+        CONCAT(firstName, ' ', lastName) AS fullName, 
+        address AS address, 
+        dateOfBirth AS dateOfBirth, 
+        phoneNumber AS __index
+    FROM people
+    WHERE age <= 50
+    ORDER BY firstName ASC, lastName DESC
+    LIMIT 50
+
+The plan for this library includes:
+
+* Conversion of PINQ queries (both read and write) to relational SQL queries.
+
+* Allow parameterized queries via the closure's used/superglobal/static field variables.
+
+* Automatically handle conversion of relational data types to PHP object such as DateTime along with some standard scalar mapping.
+
+* Along with the array syntax as above, also to provide an ORM capability to allow mapping to custom entity objects directly to SQL.
+
+* Have a defined list of common functions and operators that can be mapped to SQL equivalents. (string manipulation, math, hashing, DateTime operations, etc)
+
+The benefits library of this will include:
+
+* Abstraction over db specific code.
+
+* Allow the use of queries through terms of domain model, extremely decoupled from the database.
+
+* Prevent accidental SQL-injection vunerabilities.
+
+* Ability to utilise the PHP language features and let the library convert it to the SQL equivalent.
+
+* Optmizations such as performing queries in-memory when the data is already loaded.
+
+* Utilise IDE auto-completion and syntax checking rather than string literals.
+
+Causes for concern:
+
+* Performance, there will have to be a caching mechanism for converted queries (this is already implemented in the PINQ library).
+
+* Like with all abstractions, lose the ability to use vendor specific optimizations.
+
+* Handling of queries that are unable to be converted to a SQL equivalent.
+
+* Due to inconsistencies in PHP and mismatch between SQL, there may be many edge cases which will yield unexpected results.
+
+I have previously attempted to implement something like this before, but due to the complexity of the undertaking, the project became too large and I realised that a more formal approach would be required. 
+Soon after I began work on PINQ and in V3 I now believe that it has the necessary infrastructure to support a library such as this.
+
+You can find the repo for this [here](https://github.com/TimeToogo/Penumbra).
+There is currently a (operational) demo project and with some basic structure for how full the library may develop.
+
+The equivalent in .NET is LINQ to SQL or the Entity Framework, these make hefty use of LINQ and are widely used for DB access in the .NET world.
+As I enjoy working on some side-projects in my free time, and this would be quite time consuming, I would appreciate some feedback on the idea, 
+whether or not this would be worthwhile and if you could ever see yourself using something along these lines.
+
+
+Thanks for reading, your feedback is greatly appreciated.

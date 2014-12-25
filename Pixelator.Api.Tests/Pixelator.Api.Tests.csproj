@@ -96,6 +96,7 @@
     <Folder Include="Integration\EmbedImageTestData\" />
     <Folder Include="Integration\TestData\" />
     <Folder Include="Integration\VersionCompatData\V1\" />
+    <Folder Include="Integration\VersionCompatData\V2\" />
     <Folder Include="Integration\VersionCompatData\__Original\" />
   </ItemGroup>
   <ItemGroup>
