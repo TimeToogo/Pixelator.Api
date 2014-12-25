@@ -49,6 +49,14 @@ namespace Pixelator.Api.Tests.Integration
             }
 
             yield return Tuple.Create((EncryptionConfiguration)null, (CompressionConfiguration)null, (EmbeddedImage)null);
+            
+            var embeddedImages =
+                EmbeddedImageDirectoryInfo.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly).ToList();
+
+            yield return Tuple.Create(
+                new EncryptionConfiguration(EncryptionType.Aes256, 100), 
+                new CompressionConfiguration(CompressionType.Gzip, CompressionLevel.Minimum),
+                new EmbeddedImage(Image.FromFile(embeddedImages.OrderByDescending(file => file.Length).First().FullName), EmbeddedImage.PixelStorage.Auto));
 
             foreach (FileInfo image in EmbeddedImageDirectoryInfo.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly))
             {

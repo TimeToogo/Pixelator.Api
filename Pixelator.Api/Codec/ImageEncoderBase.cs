@@ -63,7 +63,6 @@ namespace Pixelator.Api.Codec
         }
 
         public abstract Padding Padding { get; }
-        public abstract ImageDimensionsCalculator GetImageDimensionsCalculator(int? imageWidth, int? minHeight);
 
         protected Chunk<TBody> GenerateChunk<TBody>(StructureType type, ImageConfiguration configuration, TBody body)
             where TBody : class
@@ -102,21 +101,26 @@ namespace Pixelator.Api.Codec
 
         protected bool CanUseImageFormatCompression(ImageConfiguration configuration)
         {
-            return configuration.HasCompression &&
-                   ImageFormatFactory.GetFormat(configuration.Format).CompressionType ==
-                   configuration.Compression.Type;
+            return configuration.HasCompression 
+                && ImageFormatFactory.GetFormat(configuration.Format).CompressionType == configuration.Compression.Type;
         }
 
         protected ImageOptions GenerateImageOptions(
-            ImageConfiguration configuration, 
-            int? imageWidth,
-            int? minHeight,
-            long totalBytes, 
-            PixelStorageOptions pixelStorageOptions = null)
+            ImageConfiguration configuration,
+            Imaging.ImageFormat imageFormat,
+            ImageDimensions imageDimensions)
         {
-            return new ImageOptions(
-                CanUseImageFormatCompression(configuration) ? configuration.Compression.Level : (CompressionLevel?)null,
-                GetImageDimensionsCalculator(imageWidth, minHeight).Calculate(ImageFormatFactory.GetFormat(configuration.Format), totalBytes, pixelStorageOptions));
+            CompressionLevel? compressionLevel = null;
+            if (CanUseImageFormatCompression(configuration) && !configuration.HasEmbeddedImage)
+            {
+                compressionLevel = configuration.Compression.Level;
+            }
+            else if (configuration.HasEmbeddedImage && imageFormat.SupportsCompression)
+            {
+                compressionLevel = CompressionLevel.Standard;
+            }
+
+            return new ImageOptions(compressionLevel, imageDimensions);
         }
         
         protected IDictionary<Input.File, Output.File> MapFiles(IEnumerable<File> files)

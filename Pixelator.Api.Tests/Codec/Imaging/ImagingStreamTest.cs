@@ -42,6 +42,7 @@ namespace Pixelator.Api.Tests.Codec.Imaging
         [TestCaseSource("ImageTestData")]
         public virtual void ImageFormat_InputStreamThenOuputStreamProducesEquivalentData(Stream testData)
         {
+            testData.Position = 0;
             var originalDataStream = new MemoryStream();
             testData.CopyTo(originalDataStream);
             originalDataStream.Position = 0;

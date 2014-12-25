@@ -25,7 +25,7 @@ namespace Pixelator.Api.Codec.Imaging
 
         public abstract int Channels { get; }
 
-        public abstract Stream LoadPixelDataStream(Bitmap source);
+        public abstract Stream LoadPixelDataStream(Image source);
 
         public PixelStorageOptions PixelStorageWithBitsPerChannel(byte bits, PixelStorageOptions.BitStorageMode storageMode)
         {

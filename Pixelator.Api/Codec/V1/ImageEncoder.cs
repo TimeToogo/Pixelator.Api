@@ -19,6 +19,7 @@ namespace Pixelator.Api.Codec.V1
 {
     internal class ImageEncoder : ImageEncoderBase
     {
+        protected const int ImageWidthFrameThreshold = 200;
         private readonly FileGroupingService _fileGroupingService = new FileGroupingService();
 
         public ImageEncoder(EncodingConfiguration encodingConfiguration) : base(encodingConfiguration)
@@ -35,12 +36,21 @@ namespace Pixelator.Api.Codec.V1
             get { return new IsoPadding(); }
         }
 
-        public override ImageDimensionsCalculator GetImageDimensionsCalculator(int? imageWidth, int? minHeight)
+        private ImageDimensions CalculateImageDimensions(Imaging.ImageFormat format, long totalBytes)
         {
-            return new ImageDimensionsCalculator(
-                imageWidthFrameThreshold: 200,
-                imageWidth: imageWidth,
-                minHeight: minHeight);
+            long pixelsRequired = (long)Math.Ceiling((double)totalBytes / format.BytesPerPixel);
+
+            int frames = format.SupportsFrames ? (int)Math.Ceiling(pixelsRequired / Math.Pow(ImageWidthFrameThreshold, 2)) : 1;
+
+            int imageWidth = (int)Math.Floor(Math.Sqrt(pixelsRequired / frames));
+            var imageHeight = (int)(pixelsRequired / (imageWidth * frames));
+
+            while (Math.BigMul(imageHeight, (int)Math.Floor((double)imageWidth * format.BytesPerPixel * frames)) <= totalBytes)
+            {
+                imageHeight++;
+            }
+
+            return new ImageDimensions(format.SupportsFrames ? frames : (int?)null, imageWidth, imageHeight);
         }
 
         protected override void ValidateConfiguration(ImageConfiguration configuration)
@@ -91,14 +101,7 @@ namespace Pixelator.Api.Codec.V1
 
             using (Stream imageStream = await CreateImageWriterStreamAsync(configuration, output, totalLength))
             {
-                try
-                {
-
-                    await WriteBodyData(imageStream, chunkLayoutBytes, chunkLayoutBuilder);
-                }
-                catch
-                {
-                }
+                await WriteBodyData(imageStream, chunkLayoutBytes, chunkLayoutBuilder);
             }
         }
 
@@ -110,7 +113,7 @@ namespace Pixelator.Api.Codec.V1
         protected virtual async Task<Stream> CreateImageWriterStreamAsync(ImageConfiguration configuration, Stream output, long totalBytes)
         {
             Imaging.ImageFormat imageFormat = ImageFormatFactory.GetFormat(configuration.Format);
-            ImageOptions imageOptions = GenerateImageOptions(configuration, null, null, totalBytes);
+            ImageOptions imageOptions = GenerateImageOptions(configuration, imageFormat, CalculateImageDimensions(imageFormat, totalBytes));
 
             Stream imageStream = imageFormat.CreateWriter(imageOptions).CreateOutputStream(output, true, EncodingConfiguration.BufferSize);
             await WriteHeaderAsync(imageStream);

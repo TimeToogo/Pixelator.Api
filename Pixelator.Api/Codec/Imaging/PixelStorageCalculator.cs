@@ -7,14 +7,15 @@ namespace Pixelator.Api.Codec.Imaging
     internal class PixelStorageCalculator
     {
         public PixelStorageOptions CalculatePixelStorageOptions(
-            ImageFormat outputFormat, 
-            EmbeddedImage embeddedImage,
+            ImageFormat outputFormat,
+            PixelStorage storageMode,
+            ImageDimensions imageDimensions,
             long totalBytes)
         {
-            if (embeddedImage.EmbeddedPixelStorage == PixelStorage.Auto)
+            if (storageMode == PixelStorage.Auto)
             {
                 long requiredBits = totalBytes * 8;
-                long totalPixelBytes = Math.BigMul(embeddedImage.Image.Width, embeddedImage.Image.Height * outputFormat.BytesPerPixel);
+                long totalPixelBytes = Math.BigMul(imageDimensions.Width, imageDimensions.Height * outputFormat.BytesPerPixel * (imageDimensions.Frames ?? 1));
 
                 foreach (PixelStorage storage in new[] {PixelStorage.Low, PixelStorage.Medium, PixelStorage.High})
                 {
@@ -28,7 +29,7 @@ namespace Pixelator.Api.Codec.Imaging
                 return PixelStorageWithBitsPerChannel(outputFormat, PixelStorage.High);
             }
 
-            return PixelStorageWithBitsPerChannel(outputFormat, embeddedImage.EmbeddedPixelStorage);
+            return PixelStorageWithBitsPerChannel(outputFormat, storageMode);
         }
 
         private PixelStorageOptions PixelStorageWithBitsPerChannel(ImageFormat outputFormat, PixelStorage storage)

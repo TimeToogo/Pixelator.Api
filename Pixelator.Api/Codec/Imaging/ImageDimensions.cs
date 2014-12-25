@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Linq;
 
 namespace Pixelator.Api.Codec.Imaging
 {
@@ -11,7 +12,10 @@ namespace Pixelator.Api.Codec.Imaging
         private readonly int _height;
 
         public ImageDimensions(Image image)
-            : this(image.GetFrameCount(FrameDimension.Time), image.Width, image.Height)
+            : this(
+            image.FrameDimensionsList.Contains(FrameDimension.Time.Guid) ? image.GetFrameCount(FrameDimension.Time) : (int?)null, 
+            image.Width, 
+            image.Height)
         {
         }
 

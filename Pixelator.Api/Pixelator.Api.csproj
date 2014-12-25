@@ -53,6 +53,7 @@
     <Compile Include="Codec\Imaging\PixelStorageWriterStream.cs" />
     <Compile Include="Codec\Imaging\PixelStorageOptions.cs" />
     <Compile Include="Codec\Layout\Serialization\PixelStorageOptionsSerializer.cs" />
+    <Compile Include="Codec\Streams\RepeatingStream.cs" />
     <Compile Include="Codec\Streams\ConstantStream.cs" />
     <Compile Include="Codec\Streams\PaddedStream.cs" />
     <Compile Include="Codec\DataInfo.cs" />
@@ -64,7 +65,6 @@
     <Compile Include="Codec\Imaging\GifImageFormat.cs" />
     <Compile Include="Codec\Imaging\BmpImageFormat.cs" />
     <Compile Include="Codec\Imaging\ImageDimensions.cs" />
-    <Compile Include="Codec\Imaging\ImageDimensionsCalculator.cs" />
     <Compile Include="Codec\Imaging\ImageLibraryStreams.cs" />
     <Compile Include="Codec\Imaging\ImageLibraryImageFormat.cs" />
     <Compile Include="Codec\Layout\ChunkLayoutBuilder.cs" />

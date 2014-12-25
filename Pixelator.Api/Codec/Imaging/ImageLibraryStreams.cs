@@ -213,6 +213,7 @@ namespace Pixelator.Api.Codec.Imaging
 
         private class ImageDataWriterStream : ImageDataStream
         {
+            private const int GcCollectPerFrames = 10;
             private readonly Func<BitmapEncoder> _encoderFactory;
             private readonly BitmapPalette _palette;
 
@@ -272,6 +273,12 @@ namespace Pixelator.Api.Codec.Imaging
                 {
                     encoder.Frames.Add(BitmapFrame.Create(BitmapFromArray(Frames[i], Width, Height, PixelFormat)));
                     Frames[i] = null;
+                    if (i != 0 && i % GcCollectPerFrames == 0)
+                    {
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                        GC.Collect();
+                    }
                 }
                 encoder.Save(InnerStream);
                 
@@ -282,7 +289,7 @@ namespace Pixelator.Api.Codec.Imaging
             {
                 var bitmap = new WriteableBitmap(width, height, 96, 96, format, _palette);
                 bitmap.WritePixels(new Int32Rect(0, 0, width, height), data, (format.BitsPerPixel / 8) * width, 0);
-
+                
                 return bitmap;
             }
         }

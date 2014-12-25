@@ -24,7 +24,7 @@ namespace Pixelator.Api.Codec.Imaging
             }
 
             int bytesWanted = count - _remainderBytesAmount;
-            int bytesInDivisibleUnitAmount = bytesWanted % _channelBytesPerUnit == 0 ? bytesWanted : bytesWanted + _channelBytesPerUnit - (bytesWanted % _channelBytesPerUnit);
+            int bytesInDivisibleUnitAmount = bytesWanted % _bytesPerUnit == 0 ? bytesWanted : bytesWanted + _bytesPerUnit - (bytesWanted % _bytesPerUnit);
 
             byte[] channelDataBytes = new byte[(bytesInDivisibleUnitAmount / _bytesPerUnit) * _channelBytesPerUnit];
 

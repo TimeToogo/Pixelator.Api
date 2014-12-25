@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using PixelFormat = System.Windows.Media.PixelFormat;
 
 namespace Pixelator.Api.Codec.Imaging
 {
@@ -17,14 +19,31 @@ namespace Pixelator.Api.Codec.Imaging
 
         protected abstract BitmapDecoder GetDecoder(Stream input);
 
-        public override Stream LoadPixelDataStream(Bitmap source)
+        public override Stream LoadPixelDataStream(Image source)
+        {
+            var frameCount = SupportsFrames && source.FrameDimensionsList.Contains(FrameDimension.Time.Guid)
+                ? source.GetFrameCount(FrameDimension.Time) 
+                : 1;
+            var frameBytes = source.Width * source.Height * BytesPerPixel;
+            byte[] bytes = new byte[frameBytes * frameCount];
+            for (int i = 0; i < frameCount; i++)
+            {
+                source.SelectActiveFrame(FrameDimension.Time, i);
+                using (Bitmap frameBitmap = new Bitmap(source))
+                {
+                    CopyPixelsToByteArray(new Bitmap(source), bytes, i * frameBytes);
+                }
+            }
+
+            return new MemoryStream(bytes);
+        }
+
+        private void CopyPixelsToByteArray(Bitmap source, byte[] bytes, int offset)
         {
             var bitmap = ConvertBitmap(source);
             FormatConvertedBitmap formattedBitmap = new FormatConvertedBitmap(bitmap, PixelFormat, Palette, 0);
-            byte[] bytes = new byte[bitmap.PixelWidth * bitmap.PixelHeight * BytesPerPixel];
-            formattedBitmap.CopyPixels(new Int32Rect(0, 0, formattedBitmap.PixelWidth, formattedBitmap.PixelHeight), bytes, formattedBitmap.PixelWidth * BytesPerPixel, 0);
-
-            return new MemoryStream(bytes);
+            formattedBitmap.CopyPixels(new Int32Rect(0, 0, formattedBitmap.PixelWidth, formattedBitmap.PixelHeight), bytes,
+                formattedBitmap.PixelWidth * BytesPerPixel, offset);
         }
 
         public static BitmapSource ConvertBitmap(Bitmap source)
@@ -46,7 +65,7 @@ namespace Pixelator.Api.Codec.Imaging
             return new ImageLibraryImageReader(GetDecoder);
         }
 
-        private sealed class ImageLibraryImageWriter : ImageWriter
+        protected class ImageLibraryImageWriter : ImageWriter
         {
             private readonly Func<BitmapEncoder> _encoderFactory;
             private readonly PixelFormat _pixelFormat;
@@ -77,7 +96,7 @@ namespace Pixelator.Api.Codec.Imaging
             }
         }
 
-        private sealed class ImageLibraryImageReader : ImageReader
+        protected class ImageLibraryImageReader : ImageReader
         {
             private readonly Func<Stream, BitmapDecoder> _decoderFactory;
 

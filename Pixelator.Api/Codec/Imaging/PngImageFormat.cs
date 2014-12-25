@@ -56,27 +56,30 @@ namespace Pixelator.Api.Codec.Imaging
             get { return _Channels; }
         }
 
-        public override Stream LoadPixelDataStream(Bitmap source)
+        public override Stream LoadPixelDataStream(Image source)
         {
-            var bitmap = ImageLibraryImageFormat.ConvertBitmap(source);
-            FormatConvertedBitmap formattedBitmap = new FormatConvertedBitmap(bitmap, PixelFormats.Bgra32, null, 100);
-            byte[] bytes = new byte[bitmap.PixelWidth * bitmap.PixelHeight * BytesPerPixel];
-            formattedBitmap.CopyPixels(new Int32Rect(0, 0, formattedBitmap.PixelWidth, formattedBitmap.PixelHeight), bytes, formattedBitmap.PixelWidth * BytesPerPixel, 0);
-
-            for (int i = 0; i < bytes.Length; i += 4)
+            using(Bitmap imageBitmap = new Bitmap(source))
             {
-                byte b = bytes[i];
-                byte g = bytes[i + 1];
-                byte r = bytes[i + 2];
-                byte a = bytes[i + 3];
+                var bitmap = ImageLibraryImageFormat.ConvertBitmap(imageBitmap);
+                FormatConvertedBitmap formattedBitmap = new FormatConvertedBitmap(bitmap, PixelFormats.Bgra32, null, 100);
+                byte[] bytes = new byte[bitmap.PixelWidth * bitmap.PixelHeight * BytesPerPixel];
+                formattedBitmap.CopyPixels(new Int32Rect(0, 0, formattedBitmap.PixelWidth, formattedBitmap.PixelHeight), bytes, formattedBitmap.PixelWidth * BytesPerPixel, 0);
 
-                bytes[i] = r;
-                bytes[i + 1] = g;
-                bytes[i + 2] = b;
-                bytes[i + 3] = a;
+                for (int i = 0; i < bytes.Length; i += 4)
+                {
+                    byte b = bytes[i];
+                    byte g = bytes[i + 1];
+                    byte r = bytes[i + 2];
+                    byte a = bytes[i + 3];
+
+                    bytes[i] = r;
+                    bytes[i + 1] = g;
+                    bytes[i + 2] = b;
+                    bytes[i + 3] = a;
+                }
+
+                return new MemoryStream(bytes);
             }
-
-            return new MemoryStream(bytes);
         }
 
         protected override ImageWriter _CreateWriter(ImageOptions options)

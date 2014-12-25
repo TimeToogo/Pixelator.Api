@@ -162,17 +162,6 @@ namespace Pixelator.Api.Codec.Imaging
                 _pixelByteCount += pixelData.Length;
                 _byteCount += pixelData.Length + filterBytesAdded;
 
-                /*var buffer = new List<byte>(pixelData);
-
-                while (_nextFilterByte < _byteCount + buffer.Count)
-                {
-                    int filterBytePosition = _nextFilterByte - (int)_byteCount;
-                    buffer.Insert(filterBytePosition, FilterMethod);
-                    CalculateNextFilterByte();
-                }
-
-                _byteCount += buffer.Count;
-                _compressionStream.Write(buffer.ToArray(), 0, buffer.Count);*/
                 Flush();
 
                 if (forceFlushOutput || _compressionOutputStream.Length >= _bufferSize)
@@ -312,12 +301,9 @@ namespace Pixelator.Api.Codec.Imaging
 
         private sealed class PngInputStream : Stream
         {
-            private readonly Stream _decompressionStream;
-            private readonly BufferedDataStream _decompressionInputStream;
-            private readonly BufferedDataStream _decompressedDataStorageStream;
+            private readonly Stream _idatDecompressionStream;
             private readonly Stream _inputStream;
             private readonly bool _leaveInputStreamOpen;
-            private const int MinBytesInDecompressionBuffer = 32000;
             private int _imageWidth;
             private int _imageHeight;
             private long _totalLength;
@@ -333,16 +319,167 @@ namespace Pixelator.Api.Codec.Imaging
                     throw new ArgumentException("_inputStream must be readable");
                 }
 
-                _decompressionInputStream = new BufferedDataStream();
-                _decompressedDataStorageStream = new BufferedDataStream();
-
                 _inputStream = inputStream;
                 _leaveInputStreamOpen = leaveOpen;
 
-                _decompressionStream = new ZlibAlgorithm().CreateDecompressor().CreateInputStream(_decompressionInputStream, true);
+                _idatDecompressionStream = new ZlibAlgorithm()
+                    .CreateDecompressor()
+                    .CreateInputStream(new ChunkBodyStream(this, new []{ "IDAT" }), true);
 
                 VerifyPngSignature();
                 VerifyHeader();
+            }
+
+            private class ChunkBodyStream : Stream
+            {
+                private readonly PngInputStream _pngInputStream;
+                private readonly Stream _inputStream;
+                private readonly string[] _chunkTypes;
+                private ChunkHeader _currentChunkHeader;
+                private long _currentChunkBeginPosition = 0;
+                private CRC _currentChunkCrc;
+                private long _position = 0;
+
+                public ChunkBodyStream(PngInputStream pngInputStream, string[] chunkTypes = null)
+                {
+                    if (pngInputStream == null)
+                    {
+                        throw new ArgumentNullException("pngInputStream");
+                    }
+                    _pngInputStream = pngInputStream;
+                    _inputStream = pngInputStream._inputStream;
+                    _chunkTypes = chunkTypes;
+                }
+
+                private long PositionInChunk
+                {
+                    get { return _position - _currentChunkBeginPosition; }
+                }
+
+                private long BytesLeftInChunk
+                {
+                    get { return _currentChunkHeader.ChunkLength - PositionInChunk; }
+                }
+
+                public override int Read(byte[] buffer, int offset, int count)
+                {
+                    if (_pngInputStream._isFinished)
+                    {
+                        return 0;
+                    }
+
+                    int finalBytesRead = 0;
+                    while (finalBytesRead < count)
+                    {
+                        if (_currentChunkHeader == null)
+                        {
+                            _currentChunkHeader = _pngInputStream.ReadChunkHeader();
+                            _currentChunkBeginPosition = _position;
+                            _currentChunkCrc = new CRC();
+                            _currentChunkCrc.UpdateCRC(_currentChunkHeader.ChunkTypeBuffer);
+
+                            //If IEND chunk return incomplete buffer
+                            if (_currentChunkHeader.ChunkType == "IEND")
+                            {
+                                _pngInputStream._isFinished = true;
+                                _pngInputStream.VerifyEnd(_currentChunkHeader);
+                                break;
+                            }
+
+                            if (_chunkTypes != null && !_chunkTypes.Contains(_currentChunkHeader.ChunkType))
+                            {
+                                _inputStream.Position += _currentChunkHeader.ChunkLength;
+                                continue;
+                            }
+                        }
+
+                        int bytesToRead = (int)Math.Min(BytesLeftInChunk, count - finalBytesRead);
+
+                        byte[] bodyBytes = new byte[bytesToRead];
+
+                        int totalBytesRead = 0, 
+                            bytesRead = 0;
+
+                        while ((bytesRead = _inputStream.Read(bodyBytes, bytesRead, bytesToRead - bytesRead)) > 0)
+                        {
+                            totalBytesRead += bytesRead;
+                            if (totalBytesRead == bytesToRead)
+                            {
+                                break;
+                            } 
+                            else if (bytesRead == 0)
+                            {
+                                throw new EndOfStreamException();
+                            }
+                        }
+
+                        _currentChunkCrc.UpdateCRC(bodyBytes);
+                        Buffer.BlockCopy(bodyBytes, 0, buffer, finalBytesRead, bytesToRead);
+
+                        finalBytesRead += totalBytesRead;
+                        _position += totalBytesRead;
+
+                        if (BytesLeftInChunk == 0)
+                        {
+                            ChunkFooter chunkFooter = _pngInputStream.ReadChunkFooter();
+                            if (_currentChunkCrc.Value != chunkFooter.ChunkCRC)
+                            {
+                                throw new InvalidDataException("Invalid chunk CRC");
+                            }
+
+                            _currentChunkHeader = null;
+                            _currentChunkCrc = null;
+                        }
+                    }
+
+                    return finalBytesRead;
+                }
+
+                public override void Flush()
+                {
+                    _inputStream.Flush();
+                }
+
+                public override long Seek(long offset, SeekOrigin origin)
+                {
+                    throw new NotSupportedException();
+                }
+
+                public override void SetLength(long value)
+                {
+                    throw new NotSupportedException();
+                }
+
+                public override void Write(byte[] buffer, int offset, int count)
+                {
+                    throw new NotSupportedException();
+                }
+
+                public override bool CanRead
+                {
+                    get { return true; }
+                }
+
+                public override bool CanSeek
+                {
+                    get { return false; }
+                }
+
+                public override bool CanWrite
+                {
+                    get { return false; }
+                }
+
+                public override long Length
+                {
+                    get { throw new NotSupportedException(); }
+                }
+
+                public override long Position
+                {
+                    get { return _position; }
+                    set { throw new NotSupportedException(); }
+                }
             }
 
             public override bool CanRead
@@ -461,50 +598,17 @@ namespace Pixelator.Api.Codec.Imaging
             public override int Read(byte[] buffer, int offset, int count)
             {
                 int bytesRead = 0;
-                if (!_isFinished)
-                {
-                    //Copy IDAT data to decompression input stream while less than MinBytesInDecompressionBuffer
-                    while (_decompressionInputStream.Length < MinBytesInDecompressionBuffer || _decompressionInputStream.Length < count)
-                    {
-                        //Verify chunk length and chunk type
-                        ChunkHeader chunkHeader = ReadChunkHeader();
-
-                        //If IEND chunk return incomplete buffer
-                        if (chunkHeader.ChunkType == "IEND")
-                        {
-                            _isFinished = true;
-                            VerifyEnd(chunkHeader);
-                            break;
-                        }
-
-                        //Verify chunk length and chunk type
-                        if (chunkHeader.ChunkType != "IDAT")
-                        {
-                            throw new InvalidDataException("Invalid IDAT chunk type");
-                        }
-
-                        var chunkDataBuffer = new byte[chunkHeader.ChunkLength];
-                        _inputStream.Read(chunkDataBuffer, 0, chunkDataBuffer.Length);
-                        _decompressionInputStream.Write(chunkDataBuffer, 0, chunkDataBuffer.Length);
-
-                        ChunkFooter chunkFooter = ReadChunkFooter();
-                        if (CRC.Calculate(chunkHeader.ChunkTypeBuffer, chunkDataBuffer) != chunkFooter.ChunkCRC)
-                        {
-                            throw new InvalidDataException("Invalid IDAT chunk CRC");
-                        }
-                    }
-                }
-                
                 while (bytesRead < count)
                 {
-                    var decompressedDataBuffer = new byte[count - bytesRead];
-                    int decompressedBytesRead = _decompressionStream.Read(decompressedDataBuffer, 0, decompressedDataBuffer.Length);
-                    if (decompressedBytesRead == 0)
+                    byte[] decompressedDataBuffer = new byte[count - bytesRead];
+                    int currentBytesRead = _idatDecompressionStream.Read(decompressedDataBuffer, 0, decompressedDataBuffer.Length);
+
+                    if (currentBytesRead == 0)
                     {
                         break;
                     }
 
-                    var decompressedBuffer = new List<byte>(decompressedDataBuffer).GetRange(0, decompressedBytesRead);
+                    List<byte> decompressedBuffer = new List<byte>(decompressedDataBuffer).GetRange(0, currentBytesRead);
                     while (decompressedBuffer.Count > _nextFilterByte - _byteCount)
                     {
                         int filterByteIndex = _nextFilterByte - (int)_byteCount;
@@ -519,7 +623,7 @@ namespace Pixelator.Api.Codec.Imaging
                         CalculateNextFilterByte();
                     }
 
-                    Array.Copy(decompressedBuffer.ToArray(), 0, buffer, bytesRead, decompressedBuffer.Count);
+                    Buffer.BlockCopy(decompressedBuffer.ToArray(), 0, buffer, offset + bytesRead, decompressedBuffer.Count);
 
                     _byteCount += decompressedBuffer.Count;
                     bytesRead += decompressedBuffer.Count;
@@ -530,13 +634,13 @@ namespace Pixelator.Api.Codec.Imaging
 
             public override void Flush()
             {
-                _decompressionStream.Flush();
+                _idatDecompressionStream.Flush();
             }
 
             public override void Close()
             {
                 Flush();
-                _decompressionStream.Close();
+                _idatDecompressionStream.Close();
 
                 if (!_leaveInputStreamOpen)
                 {

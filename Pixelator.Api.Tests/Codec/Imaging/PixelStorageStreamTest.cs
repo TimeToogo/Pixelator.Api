@@ -68,6 +68,8 @@ namespace Pixelator.Api.Tests.Codec.Imaging
             }
         }
 
+        private static int[] writeSizes =  { 1, 20, 16, 13, 204, 4368, 458367 };
+
         [Test]
         [TestCaseSource("TestConfigurations")]
         public virtual async Task Storage_InputStreamThenOuputStreamProducesEquivalentData(Stream testData, PixelStorageOptions pixelStorageOptions, Stream image)
@@ -81,8 +83,31 @@ namespace Pixelator.Api.Tests.Codec.Imaging
             byte[] paddingBytes;
             using(var pixelWriterStream = new PixelStorageWriterStream(pixelDataStream, image, pixelStorageOptions, true))
             {
-                paddingBytes = new byte[pixelWriterStream.BytesPerUnit - originalDataStream.Length % pixelWriterStream.BytesPerUnit];
-                await originalDataStream.CopyToAsync(pixelWriterStream);
+                paddingBytes = new byte[pixelWriterStream.BytesPerUnit - originalDataStream.Length%pixelWriterStream.BytesPerUnit];
+                // Use an uneven write size to ensure remainder bytes are handled properly
+                while (originalDataStream.Length != originalDataStream.Position)
+                {
+                    foreach (int writeSize in writeSizes)
+                    {
+                        byte[] buffer = new byte[writeSize];
+                        int totalBytesRead = 0;
+                        while (totalBytesRead < writeSize)
+                        {
+                            int bytesRead =
+                                await
+                                    originalDataStream.ReadAsync(buffer, totalBytesRead,
+                                        buffer.Length - totalBytesRead);
+                            if (bytesRead == 0)
+                            {
+                                break;
+                            }
+                            totalBytesRead += bytesRead;
+                        }
+
+                        await pixelWriterStream.WriteAsync(buffer, 0, totalBytesRead);
+                    }
+                }
+
                 await pixelWriterStream.WriteAsync(paddingBytes, 0, paddingBytes.Length);
             }
 
@@ -90,10 +115,17 @@ namespace Pixelator.Api.Tests.Codec.Imaging
             pixelDataStream.Position = 0;
             using (var imageReaderStream = new PixelStorageReaderStream(pixelDataStream, pixelStorageOptions, true))
             {
-                await imageReaderStream.CopyToAsync(decodedData);
+                await imageReaderStream.CopyToAsync(decodedData, 4096);
             }
 
-            CollectionAssert.AreEqual(originalDataStream.ToArray().Concat(paddingBytes).ToArray(), decodedData.ToArray());
+            byte[] expectedData = originalDataStream.ToArray().Concat(paddingBytes).ToArray();
+            var actualData = decodedData.ToArray();
+
+            if (!expectedData.SequenceEqual(actualData))
+            {
+                CollectionAssert.AreEqual(expectedData, actualData);
+                Assert.Fail();
+            }
         }
 
         [Test]

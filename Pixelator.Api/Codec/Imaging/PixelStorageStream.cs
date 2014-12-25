@@ -67,7 +67,7 @@ namespace Pixelator.Api.Codec.Imaging
             _unitChannelBits = byteChannelBits.Select(list => list.ToArray()).ToArray();
             _bytesPerUnit = _unitChannelBits.Length;
             _channelBytesPerUnit = _unitChannelBits.SelectMany(channels => channels).Count();
-            _remainderBytes = new byte[_channelBytesPerUnit];
+            _remainderBytes = new byte[_bytesPerUnit];
         }
         
         protected struct ByteChannelBits

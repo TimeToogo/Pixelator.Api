@@ -9,23 +9,24 @@ namespace Pixelator.Api.Codec.Imaging
     class PixelStorageWriterStream : PixelStorageStream
     {
         private readonly Stream _embeddedImagedDataStream;
+        protected readonly int _bufferSize;
 
-        public PixelStorageWriterStream(Stream imageFormatterStream, Stream embeddedImagedDataStream, PixelStorageOptions storageOptions, bool leaveOpen) :
+        public PixelStorageWriterStream(Stream imageFormatterStream, Stream embeddedImagedDataStream, PixelStorageOptions storageOptions, bool leaveOpen, int bufferSize = 4096) :
             base(imageFormatterStream, storageOptions, leaveOpen)
         {
             if (embeddedImagedDataStream != null)
             {
-                _embeddedImagedDataStream = new PaddedStream(
+                _embeddedImagedDataStream = new BufferedStream(new PaddedStream(
                     embeddedImagedDataStream,
                     paddingValue: 0,
-                    paddingLength: null); // Infinite padding
+                    paddingLength: null), bufferSize); // Infinite padding
             }
             else
             {
                 _embeddedImagedDataStream = new ConstantStream(0);
             }
 
-            _remainderBytes = new byte[_channelBytesPerUnit];
+            _bufferSize = bufferSize;
         }
 
         public override long Position
@@ -39,45 +40,50 @@ namespace Pixelator.Api.Codec.Imaging
             int bytesAvailable = count + _remainderBytesAmount;
             int bytesInDivisibleUnitAmount = bytesAvailable - (bytesAvailable % _bytesPerUnit);
             int newRemainderBytesAmount = bytesAvailable - bytesInDivisibleUnitAmount;
-            byte[] bytesToWrite = new byte[bytesInDivisibleUnitAmount];
             
-            Array.Copy(_remainderBytes, 0, bytesToWrite, 0, _remainderBytesAmount);
-            Array.Copy(buffer, offset, bytesToWrite, _remainderBytesAmount, bytesInDivisibleUnitAmount - _remainderBytesAmount);
-
-            if (newRemainderBytesAmount != 0)
-            {
-                Array.Copy(buffer, offset + bytesInDivisibleUnitAmount - 1, _remainderBytes, 0, newRemainderBytesAmount);
-            }
-
-            _remainderBytesAmount = newRemainderBytesAmount;
-
-            if (bytesInDivisibleUnitAmount == 0)
-            {
-                return;
-            }
-
-            byte[] finalBytes = new byte[bytesToWrite.Length * _channelBytesPerUnit];
+            byte[] finalBytesBuffer = new byte[_bufferSize + _channelBytesPerUnit - (_bufferSize % _channelBytesPerUnit)];
             int finalByteCount = 0;
-            for (int i = 0; i < bytesToWrite.Length;)
+            for (int i = 0; i < bytesInDivisibleUnitAmount; )
             {
                 foreach (ByteChannelBits[] currentByteChannelBits in _unitChannelBits)
                 {
-                    byte dataByte = bytesToWrite[i];
+                    byte dataByte = i < _remainderBytesAmount ? _remainderBytes[i] : buffer[offset + i - _remainderBytesAmount];
                     foreach (ByteChannelBits channelBits in currentByteChannelBits)
                     {
                         byte dataSectionByte = channelBits.GetChannelBits(dataByte);
                         var embeddedByte = (byte)_embeddedImagedDataStream.ReadByte();
-                        finalBytes[finalByteCount] = (byte)((embeddedByte & ~channelBits.Mask) | dataSectionByte);
+                        finalBytesBuffer[finalByteCount] = (byte)((embeddedByte & ~channelBits.Mask) | dataSectionByte);
 
                         _channelDataPosition++;
                         finalByteCount++;
                     }
                     i++;
                 }
+
+                if (finalByteCount == finalBytesBuffer.Length)
+                {
+                    _imageFormatterStream.Write(finalBytesBuffer, 0, finalByteCount);
+                    finalByteCount = 0;
+                }
             }
 
+            _imageFormatterStream.Write(finalBytesBuffer, 0, finalByteCount);
+
+
+            if (newRemainderBytesAmount != 0)
+            {
+                if (bytesInDivisibleUnitAmount == 0)
+                {
+                    Array.Copy(buffer, offset, _remainderBytes, _remainderBytesAmount, count);
+                }
+                else
+                {
+                    Array.Copy(buffer, offset + bytesInDivisibleUnitAmount - _remainderBytesAmount, _remainderBytes, 0, newRemainderBytesAmount);
+                }
+            }
+
+            _remainderBytesAmount = newRemainderBytesAmount;
             _position += bytesInDivisibleUnitAmount;
-            _imageFormatterStream.Write(finalBytes, 0, finalByteCount);
         }
 
         public override int Read(byte[] buffer, int offset, int count)

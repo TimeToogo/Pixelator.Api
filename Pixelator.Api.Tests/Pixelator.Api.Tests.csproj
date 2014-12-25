@@ -77,11 +77,13 @@
     <Compile Include="Codec\Layout\Serialization\ChunkInfoSerializerTest.cs" />
     <Compile Include="Codec\Layout\Serialization\SerializerTest.cs" />
     <Compile Include="Codec\Layout\Utility\FileGroupingServiceTest.cs" />
+    <Compile Include="Codec\Streams\RepeatingStreamTest.cs" />
     <Compile Include="Helpers\StreamExtensions.cs" />
     <Compile Include="Integration\DirectoryAssert.cs" />
     <Compile Include="Integration\DecodingVersionCompatTestBase.cs" />
     <Compile Include="Integration\EncodingDecodingEquivalencyTest.cs" />
     <Compile Include="Integration\ImageConfigurations.cs" />
+    <Compile Include="Integration\V2DecodingCompatTest.cs" />
     <Compile Include="Integration\V1DecodingCompatTest.cs" />
     <Compile Include="Output\DirectoryTest.cs" />
     <Compile Include="Output\FileTest.cs" />

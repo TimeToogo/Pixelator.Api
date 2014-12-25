@@ -36,6 +36,11 @@ namespace Pixelator.Api.Codec.Imaging
             get { return _bitsPerPixel; }
         }
 
+        public bool ChannelsAreRawBytes
+        {
+            get { return _channels.All(channel => channel.Bits == 8); }
+        }
+
         public enum BitStorageMode : byte
         {
             LeastSignificantBits = 0,

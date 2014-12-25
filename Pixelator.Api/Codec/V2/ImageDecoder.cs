@@ -21,6 +21,12 @@ namespace Pixelator.Api.Codec.V2
         public override async Task<Stream> GetDataReaderStreamAsync(Stream imageReaderStream)
         {
             PixelStorageOptions pixelStorageOptions = await new PixelStorageOptionsSerializer().DeserializeAsync(imageReaderStream);
+
+            if (pixelStorageOptions.ChannelsAreRawBytes)
+            {
+                return imageReaderStream;
+            }
+
             return new PixelStorageReaderStream(imageReaderStream, pixelStorageOptions, false);
         }
     }
