@@ -116,7 +116,7 @@ namespace Pixelator.Api.Codec.Imaging
 
         public int BytesLeftInUnit
         {
-            get { return (int) (_position % BytesPerUnit);  }
+            get { return _remainderBytesAmount == 0 ? 0 : _bytesPerUnit - _remainderBytesAmount; }
         }
 
         public override bool CanSeek

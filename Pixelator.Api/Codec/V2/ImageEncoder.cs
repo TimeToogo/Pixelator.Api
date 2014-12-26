@@ -165,7 +165,7 @@ namespace Pixelator.Api.Codec.V2
             {
                 //Pad the final unit of the pixel storage stream 
                 await new SubStream(
-                    pixelStorageStream.EmbeddedImageDataStream,
+                    new PaddedStream(pixelStorageStream.EmbeddedImageDataStream, 0, pixelStorageStream.BytesLeftInUnit),
                     pixelStorageStream.BytesLeftInUnit)
                     .CopyToAsync(pixelStorageStream);
             }
