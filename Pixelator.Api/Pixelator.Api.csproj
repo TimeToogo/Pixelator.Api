@@ -57,7 +57,7 @@
     <Compile Include="Codec\Streams\RepeatingStream.cs" />
     <Compile Include="Codec\Streams\ConstantStream.cs" />
     <Compile Include="Codec\Streams\PaddedStream.cs" />
-    <Compile Include="Codec\DataInfo.cs" />
+    <Compile Include="Codec\Imaging\DataInfo.cs" />
     <Compile Include="Codec\ImageEncoderFactory.cs" />
     <Compile Include="Codec\ImageDecoderFactory.cs" />
     <Compile Include="Codec\ImageDecoderBase.cs" />

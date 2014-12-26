@@ -18,7 +18,7 @@ namespace Pixelator.Api.Codec.Layout.Padding
 
         protected override async Task PadDataAsync(Stream stream, int length)
         {
-            await new SubStream(_embeddedImageStream, length).CopyToAsync(stream, _bufferSize);
+            await new SubStream(_embeddedImageStream, Math.Min(length, _embeddedImageStream.Length - _embeddedImageStream.Position)).CopyToAsync(stream, _bufferSize);
             await new SubStream(new ConstantStream(0), 0, stream.Length - stream.Position).CopyToAsync(stream, _bufferSize);
         }
 

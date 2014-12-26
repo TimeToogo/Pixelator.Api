@@ -70,6 +70,7 @@
     <Compile Include="Codec\Layout\Padding\EmbeddedImagePadding.cs" />
     <Compile Include="Codec\Layout\Padding\IsoPaddingTest.cs" />
     <Compile Include="Codec\Layout\Padding\PaddingTest.cs" />
+    <Compile Include="Codec\Layout\Serialization\PixelStorageOptionsSerializerTest.cs" />
     <Compile Include="Codec\Layout\Serialization\MetadataSerializerTest.cs" />
     <Compile Include="Codec\Layout\Serialization\FileContentsSerializerTest.cs" />
     <Compile Include="Codec\Layout\Serialization\ChunkLayoutSerializerTest.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="Codec\Layout\Serialization\SerializerTest.cs" />
     <Compile Include="Codec\Layout\Utility\FileGroupingServiceTest.cs" />
     <Compile Include="Codec\Streams\PaddedStreamTest.cs" />
+    <Compile Include="Codec\Streams\SubStreamTest.cs" />
     <Compile Include="Codec\Streams\RepeatingStreamTest.cs" />
     <Compile Include="Helpers\StreamExtensions.cs" />
     <Compile Include="Integration\DirectoryAssert.cs" />

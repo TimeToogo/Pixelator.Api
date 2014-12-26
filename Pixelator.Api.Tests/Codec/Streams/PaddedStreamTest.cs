@@ -18,7 +18,7 @@ namespace Pixelator.Api.Tests.Codec.Streams
 
         [Test]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void Constructor_FailsOnNegativeRepeatAmount()
+        public void Constructor_FailsOnPaddingAmount()
         {
             new PaddedStream(new MemoryStream(), 0, -1);
         }

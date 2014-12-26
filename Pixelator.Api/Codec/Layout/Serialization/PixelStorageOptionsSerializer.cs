@@ -7,6 +7,16 @@ namespace Pixelator.Api.Codec.Layout.Serialization
 {
     internal sealed class PixelStorageOptionsSerializer : Serializer<PixelStorageOptions>
     {
+        public int CalculateStorageLength(Imaging.ImageFormat format)
+        {
+            return CalculateStorageLength(format.Channels);
+        }
+
+        public int CalculateStorageLength(int channels)
+        {
+            return 4 + (2 * channels);
+        }
+
         protected override Task SerializeEntity(BinaryWriter writer, PixelStorageOptions entity)
         {
             writer.Write(entity.Channels.Count);

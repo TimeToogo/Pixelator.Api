@@ -15,12 +15,12 @@ namespace Pixelator.Api.Codec.Imaging
             if (storageMode == PixelStorage.Auto)
             {
                 long requiredBits = totalBytes * 8;
-                long totalPixelBytes = Math.BigMul(imageDimensions.Width, imageDimensions.Height * outputFormat.BytesPerPixel * (imageDimensions.Frames ?? 1));
+                long totalPixels = Math.BigMul(imageDimensions.Width, imageDimensions.Height * (imageDimensions.Frames ?? 1));
 
                 foreach (PixelStorage storage in new[] {PixelStorage.Low, PixelStorage.Medium, PixelStorage.High})
                 {
                     PixelStorageOptions storageOptions = PixelStorageWithBitsPerChannel(outputFormat, storage);
-                    if (totalPixelBytes * storageOptions.BitsPerPixel >= requiredBits)
+                    if (totalPixels * storageOptions.BitsPerPixel >= requiredBits)
                     {
                         return storageOptions;
                     }

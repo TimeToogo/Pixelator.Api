@@ -8,10 +8,8 @@ namespace Pixelator.Api.Codec.Streams
         private readonly Stream _stream;
         private readonly long _startOffset;
         private readonly long _length;
-        private readonly long _endOffset;
-        private long _position = 0;
 
-        public SubStream(Stream stream, long length) : this(stream, stream.Position, length)
+        public SubStream(Stream stream, long length) : this(stream, stream == null ? 0 : stream.Position, length)
         {
         }
 
@@ -22,27 +20,78 @@ namespace Pixelator.Api.Codec.Streams
                 throw new ArgumentNullException("stream");
             }
 
+            if (startOffset < 0)
+            {
+                throw new ArgumentOutOfRangeException("length", "Cannot be less than zero");
+            }
+
             if (length < 0)
             {
-                throw new ArgumentOutOfRangeException("length");
+                throw new ArgumentOutOfRangeException("length", "Cannot be less than zero");
+            }
+
+            if (startOffset + length > stream.Length)
+            {
+                throw new ArgumentOutOfRangeException("length", "The supplied length is beyond the length of the underlying stream");
             }
 
             _stream = stream;
             _startOffset = startOffset;
             _length = length;
-            _endOffset = _startOffset + length;
         }
 
-        public override int WriteTimeout
+        public override long Position
         {
-            get { return _stream.WriteTimeout; }
-            set { _stream.WriteTimeout = value; }
+            get { return Math.Max(0, Math.Min(_stream.Position - _startOffset, _length)); }
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException("value", "Cannot be less than zero");
+                }
+
+                if (value > _length)
+                {
+                    throw new ArgumentOutOfRangeException("value", "Attempted to seek beyond the end of the stream");
+                }
+
+                _stream.Position = value + _startOffset;
+            }
         }
 
-        public override int ReadTimeout
+        public override int Read(byte[] buffer, int offset, int count)
         {
-            get { return _stream.ReadTimeout; }
-            set { _stream.ReadTimeout = value; }
+            if (_stream.Position - _startOffset >= _length)
+            {
+                return 0;
+            }
+
+            if (_stream.Position < _startOffset)
+            {
+                _stream.Position = _startOffset;
+            }
+
+            int bytesRead = _stream.Read(buffer, offset, Math.Min((int)(Length - Position), count));
+
+            return bytesRead;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            switch (origin)
+            {
+                case SeekOrigin.Begin:
+                    Position = offset;
+                    break;
+                case SeekOrigin.Current:
+                    Position += offset;
+                    break;
+                case SeekOrigin.End:
+                    Position = offset + Length;
+                    break;
+            }
+
+            return Position;
         }
 
         public override bool CanWrite
@@ -70,57 +119,21 @@ namespace Pixelator.Api.Codec.Streams
             get { return _length; }
         }
 
-        public override long Position
+        public override int WriteTimeout
         {
-            get { return _position; }
-            set
-            {
-                _stream.Position = value + _startOffset;
-                _position = value;
-            }
+            get { return _stream.WriteTimeout; }
+            set { _stream.WriteTimeout = value; }
         }
 
-        private void EnsurePosition()
+        public override int ReadTimeout
         {
-            if (_stream.Position != _position + _startOffset)
-            {
-                _stream.Position = _position + _startOffset;
-            }
+            get { return _stream.ReadTimeout; }
+            set { _stream.ReadTimeout = value; }
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override void Flush()
         {
-            EnsurePosition();
-            int bytesRead = _stream.Read(buffer, offset, Math.Min((int)(Length - Position), count));
-            _position += bytesRead;
-
-            return bytesRead;
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    offset += _startOffset;
-                    break;
-                case SeekOrigin.Current:
-                    if (offset < -_position)
-                    {
-                        throw new ArgumentOutOfRangeException("offset", "Cannot seek before start of stream");
-                    }
-                    if (offset + _position > _length)
-                    {
-                        throw new ArgumentOutOfRangeException("offset", "Cannot seek beyond end of stream");
-                    }
-                    break;
-                case SeekOrigin.End:
-                    offset = offset + _endOffset;
-                    origin = SeekOrigin.Begin;
-                    break;
-            }
-
-            return _stream.Seek(offset, origin);
+            _stream.Flush();
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -131,11 +144,6 @@ namespace Pixelator.Api.Codec.Streams
         public override void SetLength(long value)
         {
             throw new NotSupportedException();
-        }
-
-        public override void Flush()
-        {
-            _stream.Flush();
         }
     }
 }

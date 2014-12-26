@@ -89,6 +89,9 @@ namespace Pixelator.Api.Codec.V2
         {
             Imaging.ImageFormat imageFormat = ImageFormatFactory.GetFormat(configuration.Format);
 
+            var pixelStorageSerializer = new PixelStorageOptionsSerializer();
+            totalBytes += pixelStorageSerializer.CalculateStorageLength(imageFormat);
+
             ImageDimensions embeddedImageDimensions = null;
             PixelStorageOptions pixelStorageOptions;
             Stream embeddedImageStream = null;
@@ -110,9 +113,7 @@ namespace Pixelator.Api.Codec.V2
                     PixelStorageOptions.BitStorageMode.MostSignificantBits);
             }
 
-            byte[] pixelStorageBytes = await new PixelStorageOptionsSerializer().SerializeToBytesAsync(pixelStorageOptions);
-            totalBytes += pixelStorageBytes.Length;
-
+            byte[] pixelStorageBytes = await pixelStorageSerializer.SerializeToBytesAsync(pixelStorageOptions);
             int embeddedImageRepeats;
 
             ImageOptions imageOptions = GenerateImageOptions(
@@ -161,19 +162,18 @@ namespace Pixelator.Api.Codec.V2
 
         private async Task WriteEmbeddedImagePaddingAsync(PixelStorageWriterStream pixelStorageStream)
         {
+            var embeddedImageDataStream = pixelStorageStream.EmbeddedImageDataStream;
             if (pixelStorageStream.BytesLeftInUnit != 0)
             {
-                //Pad the final unit of the pixel storage stream 
-                await new SubStream(
-                    new PaddedStream(pixelStorageStream.EmbeddedImageDataStream, 0, pixelStorageStream.BytesLeftInUnit),
-                    pixelStorageStream.BytesLeftInUnit)
-                    .CopyToAsync(pixelStorageStream);
+                // Pad the final unit of the pixel storage stream
+                // Cannot pad with embedded image data stream as the
+                // stream will also be read from within the storage stream
+                // advancing the image stream too far.
+                await pixelStorageStream.WriteAsync(new byte[pixelStorageStream.BytesLeftInUnit], 0, pixelStorageStream.BytesLeftInUnit);
             }
 
             // Directly copy remaining image data to underlying image stream.
-            await new EmbeddedImagePadding(
-                pixelStorageStream.EmbeddedImageDataStream, 
-                EncodingConfiguration.BufferSize)
+            await new EmbeddedImagePadding(embeddedImageDataStream, EncodingConfiguration.BufferSize)
                 .PadDataAsync(pixelStorageStream.ImageFormatterStream);
         }
     }
