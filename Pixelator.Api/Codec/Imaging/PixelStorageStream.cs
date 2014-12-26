@@ -94,7 +94,7 @@ namespace Pixelator.Api.Codec.Imaging
             }
         }
 
-        public override long Length
+        public sealed override long Length
         {
             get { return ((_imageFormatterStream.Length - _imageFormatterStreamStartPosition) / _channelBytesPerUnit) * _bytesPerUnit; }
         }
@@ -112,6 +112,11 @@ namespace Pixelator.Api.Codec.Imaging
         public int BytesPerUnit
         {
             get { return _bytesPerUnit; }
+        }
+
+        public int BytesLeftInUnit
+        {
+            get { return (int) (_position % BytesPerUnit);  }
         }
 
         public override bool CanSeek

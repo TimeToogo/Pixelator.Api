@@ -8,7 +8,7 @@ namespace Pixelator.Api.Codec.Imaging
 {
     class PixelStorageWriterStream : PixelStorageStream
     {
-        private readonly Stream _embeddedImagedDataStream;
+        private readonly Stream _embeddedImageDataStream;
         protected readonly int _bufferSize;
 
         public PixelStorageWriterStream(Stream imageFormatterStream, Stream embeddedImagedDataStream, PixelStorageOptions storageOptions, bool leaveOpen, int bufferSize = 4096) :
@@ -16,17 +16,28 @@ namespace Pixelator.Api.Codec.Imaging
         {
             if (embeddedImagedDataStream != null)
             {
-                _embeddedImagedDataStream = new BufferedStream(new PaddedStream(
-                    embeddedImagedDataStream,
-                    paddingValue: 0,
-                    paddingLength: null), bufferSize); // Infinite padding
+                long bytesLeftInEmbeddedImage = embeddedImagedDataStream.Length - embeddedImagedDataStream.Position;
+                if (bytesLeftInEmbeddedImage < Length)
+                {
+                    embeddedImagedDataStream = new PaddedStream(
+                        embeddedImagedDataStream,
+                        paddingValue: 0,
+                        paddingLength: Length - bytesLeftInEmbeddedImage);
+                }
+
+                _embeddedImageDataStream = new BufferedStream(embeddedImagedDataStream, bufferSize);
             }
             else
             {
-                _embeddedImagedDataStream = new ConstantStream(0);
+                _embeddedImageDataStream = new ConstantStream(0);
             }
 
             _bufferSize = bufferSize;
+        }
+
+        public Stream EmbeddedImageDataStream
+        {
+            get { return _embeddedImageDataStream; }
         }
 
         public override long Position
@@ -51,7 +62,7 @@ namespace Pixelator.Api.Codec.Imaging
                     foreach (ByteChannelBits channelBits in currentByteChannelBits)
                     {
                         byte dataSectionByte = channelBits.GetChannelBits(dataByte);
-                        var embeddedByte = (byte)_embeddedImagedDataStream.ReadByte();
+                        var embeddedByte = (byte)_embeddedImageDataStream.ReadByte();
                         finalBytesBuffer[finalByteCount] = (byte)((embeddedByte & ~channelBits.Mask) | dataSectionByte);
 
                         _channelDataPosition++;

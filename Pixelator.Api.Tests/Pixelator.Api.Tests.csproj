@@ -67,6 +67,7 @@
     <Compile Include="Codec\Layout\Chunks\FileContentChunkReaderAndWriterTest.cs" />
     <Compile Include="Codec\Layout\Chunks\FileLayoutChunkReaderAndWriterTest.cs" />
     <Compile Include="Codec\Layout\Chunks\ChunkReaderAndWriterTest.cs" />
+    <Compile Include="Codec\Layout\Padding\EmbeddedImagePadding.cs" />
     <Compile Include="Codec\Layout\Padding\IsoPaddingTest.cs" />
     <Compile Include="Codec\Layout\Padding\PaddingTest.cs" />
     <Compile Include="Codec\Layout\Serialization\MetadataSerializerTest.cs" />

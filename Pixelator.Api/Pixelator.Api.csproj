@@ -52,6 +52,7 @@
     <Compile Include="Codec\Imaging\PixelStorageStream.cs" />
     <Compile Include="Codec\Imaging\PixelStorageWriterStream.cs" />
     <Compile Include="Codec\Imaging\PixelStorageOptions.cs" />
+    <Compile Include="Codec\Layout\Padding\EmbeddedImagePadding.cs" />
     <Compile Include="Codec\Layout\Serialization\PixelStorageOptionsSerializer.cs" />
     <Compile Include="Codec\Streams\RepeatingStream.cs" />
     <Compile Include="Codec\Streams\ConstantStream.cs" />

@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Pixelator.Api.Codec.Imaging;
 using Pixelator.Api.Codec.Layout;
+using Pixelator.Api.Codec.Layout.Padding;
 using Pixelator.Api.Codec.Layout.Serialization;
 using Pixelator.Api.Codec.Streams;
 using Pixelator.Api.Configuration;
@@ -125,9 +126,13 @@ namespace Pixelator.Api.Codec.V2
 
             if (configuration.HasEmbeddedImage)
             {
+                var repeatingImageStream = new RepeatingStream(embeddedImageStream, embeddedImageRepeats);
                 return new PixelStorageWriterStream(
                     imageStream,
-                    new SubStream(new RepeatingStream(embeddedImageStream, embeddedImageRepeats), imageStream.Position, imageStream.Length - imageStream.Position),
+                    new SubStream(
+                        repeatingImageStream, 
+                        imageStream.Position, 
+                        repeatingImageStream.Length - repeatingImageStream.Position - imageStream.Position),
                     pixelStorageOptions,
                     leaveOpen: false,
                     bufferSize: EncodingConfiguration.BufferSize);
@@ -142,16 +147,34 @@ namespace Pixelator.Api.Codec.V2
 
             await WriteChunkData(imageStream, chunkLayoutBuilder);
 
-            var pixelStorageStream = imageStream as PixelStorageStream;
+            var pixelStorageStream = imageStream as PixelStorageWriterStream;
 
-            await WritePaddingAsync(imageStream);
-            // Important to pad the image directly as the channel bits may not line up correctly
-            // with the image file when using a low amount of bits per channel.
-            if (pixelStorageStream != null 
-                && pixelStorageStream.ImageFormatterStream.Position < pixelStorageStream.ImageFormatterStream.Length)
+            if (pixelStorageStream != null)
             {
-                await WritePaddingAsync(pixelStorageStream.ImageFormatterStream);
+                await WriteEmbeddedImagePaddingAsync(pixelStorageStream);
             }
+            else
+            {
+                await new IsoPadding(EncodingConfiguration.BufferSize).PadDataAsync(imageStream);
+            }
+        }
+
+        private async Task WriteEmbeddedImagePaddingAsync(PixelStorageWriterStream pixelStorageStream)
+        {
+            if (pixelStorageStream.BytesLeftInUnit != 0)
+            {
+                //Pad the final unit of the pixel storage stream 
+                await new SubStream(
+                    pixelStorageStream.EmbeddedImageDataStream,
+                    pixelStorageStream.BytesLeftInUnit)
+                    .CopyToAsync(pixelStorageStream);
+            }
+
+            // Directly copy remaining image data to underlying image stream.
+            await new EmbeddedImagePadding(
+                pixelStorageStream.EmbeddedImageDataStream, 
+                EncodingConfiguration.BufferSize)
+                .PadDataAsync(pixelStorageStream.ImageFormatterStream);
         }
     }
 }

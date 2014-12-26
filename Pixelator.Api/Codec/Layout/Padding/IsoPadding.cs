@@ -1,39 +1,47 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Pixelator.Api.Codec.Streams;
 
 namespace Pixelator.Api.Codec.Layout.Padding
 {
     class IsoPadding : Padding
     {
+        private readonly int _bufferSize;
+
+        public IsoPadding(int bufferSize = 4096)
+        {
+            _bufferSize = bufferSize;
+        }
+
         protected override async Task PadDataAsync(Stream stream, int length)
         {
-            var padding = new byte[length];
-            padding[0] = 80;
-
-            await stream.WriteAsync(padding, 0, length);
+            stream.WriteByte(80);
+            await new SubStream(new ConstantStream(0), 0, length - 1).CopyToAsync(stream, _bufferSize);
         }
 
         protected override async Task<bool> IsPaddingValidAsync(Stream stream, int length)
         {
-            byte[] padding;
-
-            using (var memoryStream = new MemoryStream(length))
-            {
-                await stream.CopyToAsync(memoryStream);
-                padding = memoryStream.ToArray();
-            }
-
-            if (padding[0] != 80)
+            byte[] buffer = new byte[_bufferSize];
+            if (await stream.ReadAsync(buffer, 0, 1) == 0)
             {
                 return false;
             }
 
-            for (int i = 1; i < padding.Length; i++)
+            if (buffer[0] != 80)
             {
-                if (padding[i] != 0)
+                return false;
+            }
+
+            int bytesRead = 0;
+            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) != 0)
+            {
+                for (int i = 0; i < bytesRead; i++)
                 {
-                    return false;
+                    if (buffer[i] != 0)
+                    {
+                        return false;
+                    }
                 }
             }
 

@@ -62,8 +62,6 @@ namespace Pixelator.Api.Codec
 
         }
 
-        public abstract Padding Padding { get; }
-
         protected Chunk<TBody> GenerateChunk<TBody>(StructureType type, ImageConfiguration configuration, TBody body)
             where TBody : class
         {
@@ -143,11 +141,6 @@ namespace Pixelator.Api.Codec
         protected async Task WriteHeaderAsync(Stream stream)
         {
             await stream.WriteAsync(HeaderBytes, 0, HeaderBytes.Length);
-        }
-
-        protected async Task WritePaddingAsync(Stream stream)
-        {
-            await Padding.PadDataAsync(stream);
         }
     }
 }

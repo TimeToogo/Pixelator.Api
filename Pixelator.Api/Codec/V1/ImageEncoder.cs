@@ -31,9 +31,9 @@ namespace Pixelator.Api.Codec.V1
             get { return Version.V1; }
         }
 
-        public override Padding Padding
+        private Padding Padding
         {
-            get { return new IsoPadding(); }
+            get { return new IsoPadding(EncodingConfiguration.BufferSize); }
         }
 
         private ImageDimensions CalculateImageDimensions(Imaging.ImageFormat format, long totalBytes)
@@ -138,6 +138,11 @@ namespace Pixelator.Api.Codec.V1
                 dataStream.Position = 0;
                 await dataStream.CopyToAsync(imageStream, EncodingConfiguration.BufferSize);
             }
+        }
+
+        private async Task WritePaddingAsync(Stream stream)
+        {
+            await Padding.PadDataAsync(stream);
         }
     }
 }

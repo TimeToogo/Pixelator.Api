@@ -10,5 +10,10 @@ namespace Pixelator.Api.Tests.Codec.Layout.Padding
         {
             get { return new IsoPadding(); }
         }
+
+        protected override bool PaddingIsStructured
+        {
+            get { return true; }
+        }
     }
 }

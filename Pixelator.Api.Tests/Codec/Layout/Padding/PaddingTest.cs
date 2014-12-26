@@ -26,6 +26,8 @@ namespace Pixelator.Api.Tests.Codec.Layout.Padding
             };
         }
 
+        protected abstract bool PaddingIsStructured { get; }
+
         [Test]
         [TestCaseSource("Streams")]
         public async Task PadData_FillsStreamToEnd(Stream stream)
@@ -44,19 +46,31 @@ namespace Pixelator.Api.Tests.Codec.Layout.Padding
             stream.Position = originalPosition;
 
             Assert.IsTrue(await Padding.IsPaddingValidAsync(stream));
-            Assert.AreEqual(stream.Length, stream.Position);
         }
 
         [Test]
         [TestCaseSource("Streams")]
         public async Task IsPaddingValid_VerifiesInvalidPadding(Stream stream)
         {
+            if (!PaddingIsStructured)
+            {
+                Assert.Ignore();
+            }
+
             long originalPosition = stream.Position;
             await Padding.PadDataAsync(stream);
             stream.Position = originalPosition + 1;
 
             Assert.IsFalse(await Padding.IsPaddingValidAsync(stream));
-            Assert.AreEqual(stream.Length, stream.Position);
+        }
+
+        [Test]
+        [TestCaseSource("Streams")]
+        public async Task IsPaddingValid_ReturnsFalseForCompleteStream(Stream stream)
+        {
+            stream.Position = stream.Length;
+
+            Assert.IsFalse(await Padding.IsPaddingValidAsync(stream));
         }
 
         [Test]
@@ -75,9 +89,25 @@ namespace Pixelator.Api.Tests.Codec.Layout.Padding
         [ExpectedException(typeof(InvalidDataException))]
         public async Task VerifyPadding_ThrowsForInvalidPadding(Stream stream)
         {
+            if (!PaddingIsStructured)
+            {
+                Assert.Ignore();
+            }
+
             long originalPosition = stream.Position;
-            await Padding.PadDataAsync(stream);
-            stream.Position = originalPosition + 1;
+                await Padding.PadDataAsync(stream);
+                stream.Position = originalPosition + 1;
+
+                await Padding.VerifyPaddingAsync(stream);
+            
+        }
+
+        [Test]
+        [TestCaseSource("Streams")]
+        [ExpectedException(typeof(InvalidDataException))]
+        public async Task IsPaddingValid_ThrowsForCompleteStream(Stream stream)
+        {
+            stream.Position = stream.Length;
 
             await Padding.VerifyPaddingAsync(stream);
         }

@@ -32,7 +32,7 @@ namespace Pixelator.Api.Codec.Layout.Padding
 
             if (stream.Length - stream.Position <= 0)
             {
-                throw new InvalidDataException("No padding present");
+                return false;
             }
 
             return await IsPaddingValidAsync(stream, (int) (stream.Length - stream.Position));
