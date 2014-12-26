@@ -12,8 +12,8 @@ namespace Pixelator.Api.Tests.Integration
         {
             CollectionAssert.AreEqual(GetRelativeSubdirectories(expected), GetRelativeSubdirectories(actual));
 
-            List<FileData> expectedFileData = GetRelativeFileData(expected);
-            List<FileData> actualFileDatas = GetRelativeFileData(actual);
+            FileData[] expectedFileData = GetRelativeFileData(expected);
+            FileData[] actualFileDatas = GetRelativeFileData(actual);
             AssertEx.AreEqualByJson(expectedFileData, actualFileDatas);
 
             foreach (var fileData in expectedFileData)
@@ -24,15 +24,15 @@ namespace Pixelator.Api.Tests.Integration
             }
         }
 
-        private static List<string> GetRelativeSubdirectories(DirectoryInfo directoryInfo)
+        private static string[] GetRelativeSubdirectories(DirectoryInfo directoryInfo)
         {
             return
                 directoryInfo.GetDirectories("*", SearchOption.AllDirectories)
                     .Select(directory => directory.FullName.Substring(directoryInfo.FullName.Length ))
-                    .ToList();
+                    .ToArray();
         }
 
-        private static List<FileData> GetRelativeFileData(DirectoryInfo directoryInfo)
+        private static FileData[] GetRelativeFileData(DirectoryInfo directoryInfo)
         {
             return
                 directoryInfo.GetFiles("*", SearchOption.AllDirectories)
@@ -41,7 +41,7 @@ namespace Pixelator.Api.Tests.Integration
                             new FileData(
                                 file.FullName.Substring(directoryInfo.FullName.Length),
                                 file.Length))
-                    .ToList();
+                    .ToArray();
         }
 
         private struct FileData

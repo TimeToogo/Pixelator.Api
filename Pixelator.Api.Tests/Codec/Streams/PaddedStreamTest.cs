@@ -64,11 +64,23 @@ namespace Pixelator.Api.Tests.Codec.Streams
                 ouputStream.ToArray());
 
             paddedStream.Position = 10;
+            Assert.AreEqual(10, paddedStream.Position);
+
             ouputStream = new MemoryStream();
             paddedStream.CopyTo(ouputStream);
 
             CollectionAssert.AreEqual(
-                Enumerable.Range(10, 20).Select(i => (byte)i).Concat(Enumerable.Repeat((byte)0, 30)).ToArray(),
+                Enumerable.Range(10, 10).Select(i => (byte)i).Concat(Enumerable.Repeat((byte)0, 30)).ToArray(),
+                ouputStream.ToArray());
+
+            paddedStream.Position = 20;
+            Assert.AreEqual(20, paddedStream.Position);
+
+            ouputStream = new MemoryStream();
+            paddedStream.CopyTo(ouputStream);
+
+            CollectionAssert.AreEqual(
+                Enumerable.Repeat((byte)0, 30).ToArray(),
                 ouputStream.ToArray());
         }
     }
