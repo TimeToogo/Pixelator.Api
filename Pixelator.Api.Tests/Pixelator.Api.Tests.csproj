@@ -78,6 +78,7 @@
     <Compile Include="Codec\Layout\Serialization\ChunkInfoSerializerTest.cs" />
     <Compile Include="Codec\Layout\Serialization\SerializerTest.cs" />
     <Compile Include="Codec\Layout\Utility\FileGroupingServiceTest.cs" />
+    <Compile Include="Codec\Streams\PaddedStreamTest.cs" />
     <Compile Include="Codec\Streams\RepeatingStreamTest.cs" />
     <Compile Include="Helpers\StreamExtensions.cs" />
     <Compile Include="Integration\DirectoryAssert.cs" />
