@@ -31,7 +31,7 @@ namespace Pixelator.Api.Codec.Imaging
                 source.SelectActiveFrame(FrameDimension.Time, i);
                 using (Bitmap frameBitmap = new Bitmap(source))
                 {
-                    CopyPixelsToByteArray(new Bitmap(source), bytes, i * frameBytes);
+                    CopyPixelsToByteArray(frameBitmap, bytes, i * frameBytes);
                 }
             }
 
@@ -55,9 +55,14 @@ namespace Pixelator.Api.Codec.Imaging
                           BitmapSizeOptions.FromEmptyOptions());
         }
 
-        protected override ImageWriter _CreateWriter(ImageOptions options)
+        protected sealed override ImageWriter _CreateWriter(ImageOptions options)
         {
-            return new ImageLibraryImageWriter(options, () => GetEncoder(options), PixelFormat, Palette);
+            return CreateWriter(options, () => GetEncoder(options));
+        }
+
+        protected virtual ImageWriter CreateWriter(ImageOptions options, Func<BitmapEncoder> encoderFactory)
+        {
+            return new ImageLibraryImageWriter(options, encoderFactory, PixelFormat, Palette);
         }
 
         public override ImageReader CreateReader()
@@ -89,9 +94,9 @@ namespace Pixelator.Api.Codec.Imaging
                     Options.Dimensions.Frames ?? 1, 
                     Options.Dimensions.Width, 
                     Options.Dimensions.Height,
-                    _pixelFormat, 
-                    _palette, 
-                    output, 
+                    _pixelFormat,
+                    _palette,
+                    output,
                     leaveOpen);
             }
         }

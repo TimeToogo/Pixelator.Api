@@ -53,9 +53,9 @@ namespace Pixelator.Api.Codec.Imaging
             get { return BitmapPalettes.WebPaletteTransparent; }
         }
 
-        protected override ImageWriter _CreateWriter(ImageOptions options)
+        protected override ImageWriter CreateWriter(ImageOptions options, Func<BitmapEncoder> encoderFactory)
         {
-            return new LoopingAnimatedGifImageWriter(options, () => GetEncoder(options), PixelFormat, Palette);
+            return new LoopingAnimatedGifImageWriter(options, encoderFactory, PixelFormat, Palette);
         }
 
         protected override BitmapEncoder GetEncoder(ImageOptions options)
