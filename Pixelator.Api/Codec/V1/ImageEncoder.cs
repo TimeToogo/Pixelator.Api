@@ -78,13 +78,16 @@ namespace Pixelator.Api.Codec.V1
 
             var fileGroupSerializer = new FileGroupContentsSerializer(EncodingConfiguration);
             var fileGroups = new List<FileGroup>();
+            var fileStreams = new List<Stream>();
             foreach (var group in groupedFiles)
             {
                 fileGroups.Add(new FileGroup(group.Select(file => mappedFiles[file])));
+                var fileGroupStreams = group.Select(file => file.GetStream()).ToList();
+                fileStreams.AddRange(fileGroupStreams);
                 chunkLayoutBuilder.Append(GenerateChunk(
                     StructureType.FileGroupContents,
                     configuration,
-                    new FileGroupContents(new CombinedStream(group.Select(file => file.Stream)))),
+                    new FileGroupContents(new CombinedStream(fileGroupStreams))),
                     chunkWriter,
                     fileGroupSerializer);
             }
@@ -103,6 +106,8 @@ namespace Pixelator.Api.Codec.V1
             {
                 await WriteBodyData(imageStream, chunkLayoutBytes, chunkLayoutBuilder);
             }
+
+            fileStreams.ForEach(stream => stream.Close());
         }
 
         protected virtual long CalculateTotalLength(byte[] chunkLayoutBytes, ChunkLayout chunkLayout)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Ionic.Zip;
 using NUnit.Framework;
 using Pixelator.Api.Configuration;
 using Pixelator.Api.Utility;
@@ -29,40 +30,37 @@ namespace Pixelator.Api.Tests.Integration
                 throw new Exception("No test data for version compat test encoded data created at: " + _ouputTempVersionDataDirectory.FullName);
             }
 
-            foreach (var inputDirectory in inputDirectories)
-            {
-                yield return new object[] { inputDirectory.EnumerateFiles().Single(), inputDirectory.EnumerateDirectories().Single() };
-            }
+            return inputDirectories.Select(directory => new [] { directory });
         }
 
         [Test]
         [TestCaseSource("TestData")]
-        public async Task DecodingImages_ProducesOriginalData(
-            FileInfo inputFile, 
-            DirectoryInfo originalDataDirectory)
+        public async Task DecodingImages_ProducesOriginalData(DirectoryInfo inputDirectory)
         {
-            DirectoryInfo outputDirectory = null;
+            var inputEncodedFile = inputDirectory.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly).ToList().Single(file => file.Extension != ".zip");
+            var outputDataZipFile = inputDirectory.EnumerateFiles("*.zip", SearchOption.TopDirectoryOnly).Single();
+
+            DirectoryInfo expectedOutputDataDirectory = inputDirectory.CreateSubdirectory("Expected_Data");
+            DirectoryInfo actualOutputDataDirectory = inputDirectory.CreateSubdirectory("Decoded_Data");
             try
             {
-                using (FileStream storageStream = inputFile.OpenRead())
+                using (FileStream storageStream = inputEncodedFile.OpenRead())
                 {
-                    var decoder = await ImageDecoder.LoadAsync(storageStream, DecodingConfiguration);
-                    outputDirectory = _ouputRootDirectory.CreateSubdirectory(originalDataDirectory.Name);
-                    await decoder.DecodeAsync(outputDirectory);
+                    using (var zipFile = ZipFile.Read(outputDataZipFile.FullName))
+                    {
+                        zipFile.ExtractAll(expectedOutputDataDirectory.FullName);
+                    }
 
-                    DirectoryAssert.AreEquivalent(originalDataDirectory, outputDirectory);
+                    var decoder = await ImageDecoder.LoadAsync(storageStream, DecodingConfiguration);
+                    await decoder.DecodeAsync(actualOutputDataDirectory);
+
+                    DirectoryAssert.AreEquivalent(expectedOutputDataDirectory, actualOutputDataDirectory);
                 }
             }
             finally
             {
-                if (outputDirectory != null)
-                {
-                    try
-                    {
-                        outputDirectory.Delete(true);
-                    }
-                    catch (Exception) { }
-                }
+                expectedOutputDataDirectory.Delete(true);
+                actualOutputDataDirectory.Delete(true);
             }
         }
 
@@ -73,7 +71,7 @@ namespace Pixelator.Api.Tests.Integration
                 await
                     CreateVersionCompatData(
                         (ImageFormat)config[0],
-                        (DirectoryInfo)config[1],
+                        (FileInfo)config[1],
                         (EncryptionConfiguration)config[2],
                         (CompressionConfiguration)config[3],
                         (EmbeddedImage)config[4]);
@@ -82,12 +80,13 @@ namespace Pixelator.Api.Tests.Integration
 
         private async Task CreateVersionCompatData(
             ImageFormat format,
-            DirectoryInfo inputDirectory,
+            FileInfo inputZipFIle,
             EncryptionConfiguration encryption,
             CompressionConfiguration compression,
             EmbeddedImage embeddedImage)
         {
-            string outputName = inputDirectory.Name.Substring(0, Math.Min(inputDirectory.Name.Length, 10)) + "-" + Enum.GetName(typeof(ImageFormat), format);
+            var inputFileName = Path.GetFileNameWithoutExtension(inputZipFIle.Name);
+            string outputName = inputFileName.Substring(0, Math.Min(inputFileName.Length, 10)) + "-" + Enum.GetName(typeof(ImageFormat), format);
             if (embeddedImage != null)
             {
                 outputName += "-E";
@@ -103,24 +102,29 @@ namespace Pixelator.Api.Tests.Integration
                 outputName += "-" + Enum.GetName(typeof(CompressionType), compression.Type).Substring(0, 3);
             }
 
+
+            var tempInputDataDirectory = _ouputTempVersionDataDirectory.CreateSubdirectory(outputName + "_original_data");
+            using (var zipFile = ZipFile.Read(inputZipFIle.FullName))
+            {
+                zipFile.ExtractAll(tempInputDataDirectory.FullName);
+            }
+
+
             DirectoryInfo outputDirectory = _ouputTempVersionDataDirectory.CreateSubdirectory(outputName);
             var encoder = new ImageEncoder(format, encryption, compression, embeddedImage);
-            using (Stream encodedImageFile = File.Create(Path.Combine(outputDirectory.FullName, inputDirectory.Name + "." + encoder.Extension)))
+            using (Stream encodedImageFile = File.Create(Path.Combine(outputDirectory.FullName, inputFileName + "." + encoder.Extension)))
             {
-                encoder.AddDirectory(inputDirectory);
-                await encoder.SaveAsync(encodedImageFile, new EncodingConfiguration("!!somePass!!", new MemoryStorageProvider(), 4096, 1024 * 500));
+                encoder.AddDirectory(tempInputDataDirectory);
+                await encoder.SaveAsync(encodedImageFile, new EncodingConfiguration(
+                    password: "!!somePass!!", 
+                    tempStorageProvider: new MemoryStorageProvider(), 
+                    bufferSize: 4096, 
+                    fileGroupSize: 1024 * 500));
 
-                //Copy directory contents
-                var originalDataDirectory = outputDirectory.CreateSubdirectory("Original_Data");
-                foreach (DirectoryInfo subDirectory in inputDirectory.EnumerateDirectories("*", SearchOption.AllDirectories))
-                {
-                    Directory.CreateDirectory(subDirectory.FullName.Replace(inputDirectory.FullName, originalDataDirectory.FullName));
-                }
-                foreach (FileInfo file in inputDirectory.EnumerateFiles("*.*", SearchOption.AllDirectories))
-                {
-                    file.CopyTo(file.FullName.Replace(inputDirectory.FullName, originalDataDirectory.FullName), true);
-                }
+                inputZipFIle.CopyTo(Path.Combine(outputDirectory.FullName, "Original_Data.zip"), true);
             }
+
+            tempInputDataDirectory.Delete(true);
         }
     }
 }

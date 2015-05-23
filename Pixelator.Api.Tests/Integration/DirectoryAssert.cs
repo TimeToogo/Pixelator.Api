@@ -18,9 +18,9 @@ namespace Pixelator.Api.Tests.Integration
 
             foreach (var fileData in expectedFileData)
             {
-                Assert.IsTrue(
-                    File.ReadAllBytes(actual.FullName + fileData.relativePath)
-                    .SequenceEqual(File.ReadAllBytes(expected.FullName + fileData.relativePath)));
+                CollectionAssert.AreEqual(
+                    File.ReadAllBytes(expected.FullName + fileData.relativePath),
+                    File.ReadAllBytes(actual.FullName + fileData.relativePath), actual.FullName + fileData.relativePath);
             }
         }
 

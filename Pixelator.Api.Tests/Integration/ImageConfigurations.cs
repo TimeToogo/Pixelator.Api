@@ -69,14 +69,14 @@ namespace Pixelator.Api.Tests.Integration
 
         public static IEnumerable<object[]> GetTestConfigurations(DirectoryInfo inputRootDirectory)
         {
-            var inputDirectories = inputRootDirectory.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).ToList();
+            var inputZipFiles = inputRootDirectory.EnumerateFiles("*.zip", SearchOption.TopDirectoryOnly).ToList();
             foreach (var format in GetFormats())
             {
                 foreach (var configuration in GetConfigurations())
                 {
-                    foreach (var inputDirectory in inputDirectories)
+                    foreach (var inputZipFile in inputZipFiles)
                     {
-                        yield return new object[] { format, inputDirectory, configuration.Item1, configuration.Item2, configuration.Item3, GetMetadata() };
+                        yield return new object[] { format, inputZipFile, configuration.Item1, configuration.Item2, configuration.Item3, GetMetadata() };
                     }
                 }
             }

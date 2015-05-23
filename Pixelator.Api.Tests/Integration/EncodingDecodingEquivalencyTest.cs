@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Ionic.Zip;
 using NUnit.Framework;
 using Pixelator.Api.Configuration;
 using Pixelator.Api.Tests.Codec.Layout;
@@ -23,17 +25,24 @@ namespace Pixelator.Api.Tests.Integration
         [TestCaseSource("TestConfigurations")]
         public async Task EncodingThenDecoding_ProducesEquivalentResults(
             ImageFormat format,
-            DirectoryInfo inputDirectory,
+            FileInfo inputZipFile,
             EncryptionConfiguration encryption,
             CompressionConfiguration compression,
             EmbeddedImage embeddedImage,
             IDictionary<string, string> metadata)
         {
+            DirectoryInfo inputDirectory = null;
             DirectoryInfo outputDirectory = null;
             try
             {
                 using (var storageStream = new MemoryStream())
                 {
+                    inputDirectory = _inputRootDirectory.CreateSubdirectory(Path.GetFileNameWithoutExtension(inputZipFile.Name));
+                    using (var zipFile = ZipFile.Read(inputZipFile.FullName))
+                    {
+                        zipFile.ExtractAll(inputDirectory.FullName);
+                    }
+
                     var encoder = new ImageEncoder(format, encryption, compression, embeddedImage);
 
                     encoder.Metadata = metadata;
@@ -52,13 +61,12 @@ namespace Pixelator.Api.Tests.Integration
             }
             finally
             {
-                if (outputDirectory != null)
+                foreach (var directory in new[] {inputDirectory, outputDirectory})
                 {
-                    try
+                    if (directory != null)
                     {
-                        outputDirectory.Delete(true);
+                        directory.Delete(true);
                     }
-                    catch (Exception) { }
                 }
             }
         }

@@ -129,8 +129,9 @@ namespace Pixelator.Api
         {
             string relativePath = directoryInfo.FullName.Substring(rootPath.Length);
             return new Directory(relativePath,
-                directoryInfo.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
-                    .Select(fileInfo => new File(fileInfo.OpenRead())));
+                directoryInfo
+                    .EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
+                    .Select(fileInfo => new File(fileInfo)));
         }
 
         public async Task SaveAsync(Stream outputStream, EncodingConfiguration encodingConfiguration)
