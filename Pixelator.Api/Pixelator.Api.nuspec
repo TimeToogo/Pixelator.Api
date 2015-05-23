@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Pixelator.Api</id>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <title>Pixelator.Api</title>
     <authors>Elliot Levin</authors>
     <owners>Elliot Levin</owners>
@@ -11,7 +11,7 @@
     <iconUrl>https://pixelator.io/favicon.ico</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>The Pixelator image transcoding API</description>
-    <releaseNotes>First release</releaseNotes>
+    <releaseNotes>Add new constructor for input files</releaseNotes>
     <copyright>Copyright 2015</copyright>
     <tags>pixelator image steganography</tags>
   </metadata>
