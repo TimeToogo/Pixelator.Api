@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Pixelator.Api</id>
+    <version>1.0.0</version>
+    <title>Pixelator.Api</title>
+    <authors>Elliot Levin</authors>
+    <owners>Elliot Levin</owners>
+    <licenseUrl>https://github.com/TimeToogo/Pixelator.Api/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/TimeToogo/Pixelator.Api</projectUrl>
+    <iconUrl>https://pixelator.io/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>The Pixelator image transcoding API</description>
+    <releaseNotes>First release</releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <tags>pixelator image steganography</tags>
+  </metadata>
+</package>
