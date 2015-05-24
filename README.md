@@ -1,6 +1,10 @@
 Pixelator.Api
 =============
 
+[![Release](https://img.shields.io/nuget/v/Pixelator.Api.svg?style=flat-square)](https://www.nuget.org/packages/Pixelator.Api/)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)
+[![Downloads](https://img.shields.io/nuget/dt/Pixelator.Api.svg?style=flat-square)](https://www.nuget.org/packages/Pixelator.Api/)
+
 The image transcoding API behind [pixelator.io](https://pixelator.io)
 
 This library supports encoding and decoding of data within images offering 
